@@ -64,3 +64,23 @@ class PDFCacheHandler:
         except Exception as e:
             logger.error(f"Failed to list PDF files in cache directory '{self.cache_dir}': {e}")
             raise
+
+    def remove_pdf(self, pdf_hash: str) -> bool:
+        """Remove a PDF file from the cache directory based on its hash.
+
+        Args:
+            pdf_hash (str): The hash of the PDF file to be removed.
+        """
+        pdf_path = Path(self.cache_dir) / f"{pdf_hash}.pdf"
+
+        if not pdf_path.exists():
+            logger.warning(f"PDF with hash '{pdf_hash}' does not exist in cache.")
+            return False
+
+        try:
+            pdf_path.unlink()
+            logger.info(f"PDF with hash '{pdf_hash}' removed from cache.")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to remove PDF with hash '{pdf_hash}' from cache: {e}")
+            raise
