@@ -96,3 +96,27 @@ def test_remove_nonexistent_pdf(tmp_path):
 
     removed = SUT.remove_pdf("nonexistenthash")
     assert removed is False
+
+def test_clear_cache(tmp_path):
+    cache_dir = tmp_path / "pdf_cache"
+    SUT = PDFCacheHandler(cache_dir)
+
+    mocked_file1 = Mock(spec=Path)
+    mocked_file1.is_file.return_value = True
+    mocked_file1.suffix = ".pdf"
+    mocked_file1.read_bytes.return_value = b"%PDF-1.4\n%EOF"
+
+    mocked_file2 = Mock(spec=Path)
+    mocked_file2.is_file.return_value = True
+    mocked_file2.suffix = ".pdf"
+    mocked_file2.read_bytes.return_value = b"%PDF-1.4\n%EOF"
+
+    with patch("backend.app.services.pdf_cache_handler.compute_hash", side_effect=["hash1", "hash2"]):
+        SUT.ingest_pdf(mocked_file1)
+        SUT.ingest_pdf(mocked_file2)
+
+    assert len(SUT.get_items()) == 2
+
+    SUT.clear_cache()
+
+    assert len(SUT.get_items()) == 0

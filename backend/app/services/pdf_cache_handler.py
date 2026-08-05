@@ -84,3 +84,13 @@ class PDFCacheHandler:
         except Exception as e:
             logger.error(f"Failed to remove PDF with hash '{pdf_hash}' from cache: {e}")
             raise
+
+    def clear_cache(self) -> None:
+        """Clear all PDF files from the cache directory."""
+        try:
+            for pdf_file in Path(self.cache_dir).glob("*.pdf"):
+                pdf_file.unlink()
+            logger.info(f"All PDF files cleared from cache directory '{self.cache_dir}'.")
+        except Exception as e:
+            logger.error(f"Failed to clear PDF cache directory '{self.cache_dir}': {e}")
+            raise
