@@ -72,6 +72,21 @@ def test_get_items_returns_correct_list(tmp_path):
     assert any("hash1.pdf" in item for item in items)
     assert any("hash2.pdf" in item for item in items)
 
+def test_get_pdf_path(tmp_path):
+    cache_dir = tmp_path / "pdf_cache"
+    SUT = PDFCacheHandler(cache_dir)
+
+    mocked_file = Mock(spec=Path)
+    mocked_file.is_file.return_value = True
+    mocked_file.suffix = ".pdf"
+    mocked_file.read_bytes.return_value = b"%PDF-1.4\n%EOF"
+
+    with patch("backend.app.services.pdf_cache_handler.compute_hash", return_value="fakehash"):
+        cached_pdf_path = SUT.ingest_pdf(mocked_file)
+
+    retrieved_path = SUT.get_pdf_path("fakehash")
+    assert retrieved_path == cached_pdf_path
+
 def test_remove_pdf(tmp_path):
     cache_dir = tmp_path / "pdf_cache"
     SUT = PDFCacheHandler(cache_dir)
