@@ -8,7 +8,7 @@ class TEICacheHandler(BaseCacheHandler):
     """Handles TEI cache, including saving, retrieving, and deleting TEI files."""
 
     def __init__(self, output_dir: str | Path):
-        super().__init__(output_dir, ".xml", "TEI")
+        super().__init__(output_dir, ".tei.xml", "TEI")
 
     def ingest_tei(self, file_path: Path) -> Path:
         """Ingest a TEI file into the cache directory."""

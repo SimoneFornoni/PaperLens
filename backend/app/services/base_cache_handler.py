@@ -33,7 +33,8 @@ class BaseCacheHandler:
         if not file_path.is_file():
             raise ValueError(f"Provided path '{file_path}' is not a valid file.")
 
-        if file_path.suffix.lower() != self.allowed_suffix:
+        current_suffix = "".join(file_path.suffixes).lower()
+        if current_suffix != self.allowed_suffix.lower():
             raise ValueError(f"Provided file '{file_path}' is not a {self.kind_name}.")
 
         file_hash = compute_hash(file_path)
