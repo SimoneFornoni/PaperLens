@@ -1,3 +1,4 @@
+"""Chunker service for processing TEI XML documents into structured text chunks."""
 import logging
 
 import xml.etree.ElementTree as ET
@@ -7,10 +8,10 @@ from ..models.chunk_models import ProcessedParagraph
 from ..models.chunk_models import ChunkingState
 from ..models.chunk_models import ExtractedChunk
 
-
 logger = logging.getLogger(__name__)
 
 class Chunker:
+    """Processes TEI XML documents to extract structured text chunks."""
 
     # Reference section patterns to detect bibliography/references
     REFERENCE_PATTERNS = [
@@ -33,10 +34,6 @@ class Chunker:
 
     # Minimum word count before a paragraph is treated as standalone.
     MIN_PARAGRAPH_WORDS = 10
-
-    def __init__(self):
-        """Initialize the Chunker."""
-        logger.info("Initialized Chunker for TEI XML processing.")
 
     def extract_text_chunks(self, tei_root: ET.Element) -> Tuple[List[ExtractedChunk], str]:
         """
@@ -78,10 +75,10 @@ class Chunker:
                 ns,
             )
 
+        # Extract from body
         body = tei_root.find('.//tei:body', ns)
         if body is not None:
             for section_div in body.findall('.//tei:div', ns):
-                # Determine section type based on head element
                 head = section_div.find('.//tei:head', ns)
                 head_text_raw = "".join(head.itertext()).strip() if head is not None else ""
                 section_type = self._determine_section_type(head_text_raw.lower())
@@ -95,6 +92,7 @@ class Chunker:
                     ns,
                 )
 
+        # Handle any remaining pending short paragraph
         if chunking_state.pending_short_para and chunks:
             last_para = chunks[-1]
             last_para.text = f"{last_para.text} {chunking_state.pending_short_para}"
@@ -180,6 +178,7 @@ class Chunker:
                     except ValueError: 
                         pass
 
+        # Handle case where no <s> elements are found, but <p> has text
         if not senteces_coords:
             paragraph_text = " ".join("".join(p_elem.itertext()).split())
             if paragraph_text:

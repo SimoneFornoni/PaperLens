@@ -1,5 +1,5 @@
-import pytest
-from unittest.mock import patch
+"""Test cases for the Chunker service."""
+
 from pathlib import Path
 import xml.etree.ElementTree as ET
 

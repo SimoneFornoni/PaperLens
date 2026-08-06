@@ -1,4 +1,4 @@
-"""PDF processing using GROBID service."""
+"""PDF parsing and text extraction service using GROBID."""
 
 import logging
 import threading
