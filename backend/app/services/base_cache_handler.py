@@ -1,0 +1,93 @@
+"""Generic cache handler for storing and retrieving files by hash."""
+
+from __future__ import annotations
+
+import logging
+import os
+from pathlib import Path
+from typing import List
+
+from ..utils.pdf_helpers import compute_hash
+
+logger = logging.getLogger(__name__)
+
+class BaseCacheHandler:
+    """Generic cache handler for files of a given extension."""
+
+    def __init__(self, output_dir: str, allowed_suffix: str, cache_type: str):
+        if not output_dir:
+            raise ValueError("Cache directory must be provided.")
+
+        self.cache_dir = os.path.abspath(str(f"{output_dir}/{cache_type.lower()}_cache"))
+        os.makedirs(self.cache_dir, exist_ok=True)
+
+        if not os.path.isdir(self.cache_dir):
+            raise ValueError(f"{cache_type} cache directory '{self.cache_dir}' is not a valid directory.")
+
+        self.allowed_suffix = allowed_suffix
+        self.kind_name = cache_type
+        logger.info(f"{cache_type} cache directory set to: {self.cache_dir}")
+
+    def ingest_file(self, file_path: Path) -> Path:
+        """Ingest a file into the cache directory, saving it with a unique hash-based filename."""
+        if not file_path.is_file():
+            raise ValueError(f"Provided path '{file_path}' is not a valid file.")
+
+        if file_path.suffix.lower() != self.allowed_suffix:
+            raise ValueError(f"Provided file '{file_path}' is not a {self.kind_name}.")
+
+        file_hash = compute_hash(file_path)
+        destination = Path(self.cache_dir) / f"{file_hash}{self.allowed_suffix}"
+
+        if destination.exists():
+            logger.info(f"{self.kind_name} '{file_path}' already exists in cache as '{destination}'.")
+            return destination
+
+        try:
+            destination.write_bytes(file_path.read_bytes())
+            logger.info(f"{self.kind_name} '{file_path}' ingested into cache as '{destination}'.")
+            return destination
+        except Exception as e:
+            logger.error(f"Failed to ingest {self.kind_name.lower()} '{file_path}' into cache: {e}")
+            raise
+
+    def get_items(self) -> List[str]:
+        """Get a list of cached files."""
+        try:
+            return [f.name for f in Path(self.cache_dir).glob(f"*{self.allowed_suffix}")]
+        except Exception as e:
+            logger.error(f"Failed to list {self.kind_name.lower()} files in cache directory '{self.cache_dir}': {e}")
+            raise
+
+    def get_file_path(self, file_hash: str) -> Path:
+        """Retrieve the path of a cached file based on its hash."""
+        file_path = Path(self.cache_dir) / f"{file_hash}{self.allowed_suffix}"
+        if not file_path.exists():
+            raise FileNotFoundError(f"{self.kind_name} with hash '{file_hash}' not found in cache.")
+        return file_path
+
+    def remove_file(self, file_hash: str) -> bool:
+        """Remove a cached file from the cache directory based on its hash."""
+        file_path = Path(self.cache_dir) / f"{file_hash}{self.allowed_suffix}"
+
+        if not file_path.exists():
+            logger.warning(f"{self.kind_name} with hash '{file_hash}' does not exist in cache.")
+            return False
+
+        try:
+            file_path.unlink()
+            logger.info(f"{self.kind_name} with hash '{file_hash}' removed from cache.")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to remove {self.kind_name.lower()} with hash '{file_hash}' from cache: {e}")
+            raise
+
+    def clear_cache(self) -> None:
+        """Clear all cached files from the cache directory."""
+        try:
+            for cache_file in Path(self.cache_dir).glob(f"*{self.allowed_suffix}"):
+                cache_file.unlink()
+            logger.info(f"All {self.kind_name.lower()} files cleared from cache directory '{self.cache_dir}'.")
+        except Exception as e:
+            logger.error(f"Failed to clear {self.kind_name.lower()} cache directory '{self.cache_dir}': {e}")
+            raise

@@ -7,7 +7,9 @@ authors = [
     { name = "Simone Fornoni", email = "simonefornoni04@gmail.com" }
 ]
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "grobid-client-python>=0.1.5",
+]
 
 [dependency-groups]
 dev = [
