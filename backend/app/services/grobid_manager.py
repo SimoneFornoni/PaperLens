@@ -16,28 +16,6 @@ logger = logging.getLogger(__name__)
 
 class GROBIDManager:
     """Handles PDF parsing and text extraction using GROBID."""
-
-    # Reference section patterns to detect bibliography/references
-    REFERENCE_PATTERNS = [
-        r'^\s*references\s*$',
-        r'^\s*bibliography\s*$',
-        r'^\s*works\s+cited\s*$',
-        r'^\s*literature\s+cited\s*$',
-    ]
-    
-    # Section types to include in chunking (can be customized)
-    CONTENT_SECTIONS = {
-        'body': True,
-        'abstract': True,
-        'introduction': True,
-        'conclusion': True,
-        'results': True,
-        'methods': True,
-        'discussion': True,
-    }
-
-    # Minimum word count before a paragraph is treated as standalone.
-    MIN_PARAGRAPH_WORDS = 10
     
     # Serialize calls to GROBID to avoid exhausting its internal pool
     GROBID_LOCK = threading.Lock()
