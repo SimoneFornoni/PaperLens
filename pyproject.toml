@@ -8,7 +8,10 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
+    "fastembed>=0.8.0",
     "grobid-client-python>=0.1.5",
+    "numpy>=2.5.2",
+    "torch>=2.13.0",
 ]
 
 [dependency-groups]

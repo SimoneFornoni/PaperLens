@@ -1,4 +1,4 @@
-"""Data models for the backend application."""
+"""Data models for chunk elaboration and extraction."""
 from dataclasses import dataclass, field
 from typing import List, Tuple
 
