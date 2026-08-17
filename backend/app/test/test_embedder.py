@@ -9,13 +9,6 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-def test_vector_size_property():
-    SUT = Embedder()
-    vector_size = SUT.dense_vector_size
-
-    assert isinstance(vector_size, int)
-    assert vector_size > 0
-
 def test_embed_text():
     SUT = Embedder()
     texts = ["This is a test.", "Another test sentence."]
@@ -39,3 +32,10 @@ def test_embed_memory_memory_exeption():
     with patch.object(SUT, "_embed_dense_batch", side_effect=MemoryError("Simulated memory error")):
         with pytest.raises(MemoryError, match="Simulated memory error"):
             SUT.embed_text(texts)
+
+def test_vector_size_property():
+    SUT = Embedder()
+    vector_size = SUT.dense_vector_size
+
+    assert isinstance(vector_size, int)
+    assert vector_size > 0
