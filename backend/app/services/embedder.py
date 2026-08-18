@@ -95,6 +95,7 @@ class Embedder:
         if not dense_embeddings:
             return {"dense": [], "sparse": []}
 
+        logger.info(f"Successfully encoded {len(all_texts)} texts into embeddings.")
         return {
             "dense": np.vstack(dense_embeddings).tolist(),
             "sparse": sparse_embeddings
@@ -141,6 +142,7 @@ class Embedder:
             except Exception:
                 return last_safe_batch_size
 
+        logger.info(f"Found safe batch size for embedding: {last_safe_batch_size}")
         return max(start_size, int(last_safe_batch_size * target_memory_fraction))
 
     @staticmethod

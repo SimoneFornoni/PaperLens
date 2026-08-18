@@ -104,7 +104,8 @@ class Chunker:
         if title_text:
             title_block = f"Title: {title_text}"
             document_text = f"{title_block}\n\n{document_text}" if document_text else title_block
-        
+
+        logger.info(f"Extracted {len(chunks)} text chunks from TEI document.")
         return chunks, document_text
         
     def _collect_paragraphs(self,
@@ -121,14 +122,11 @@ class Chunker:
             section_type (str): Section type for categorization.
             paragraphs (List[ExtractedParagraph]): List to append extracted paragraphs to.
             full_text_parts (List[str]): List to append full text parts.
-            paragraph_idx (int): Current paragraph index.
-            pending_short_para (str): Buffer for short paragraph text that may need to be merged.
-            pending_coords (List[Tuple[int, int]]): Buffer for coordinates of sentences in the pending short paragraph.
+            chunking_state (ChunkingState): Current state of paragraph index and pending short paragraph.
             ns (Dict[str, str]): Namespace dictionary for XML parsing.
         
         Returns:
-            Tuple[CollectedParagraph]: Updated paragraph index, pending short paragraph text
-                                       and pending coordinates.
+            ChunkingState: Updated state after processing paragraphs.
         """
         for p_elem in p_elements:
             processed_paragraph = self._process_paragraph(p_elem, ns)

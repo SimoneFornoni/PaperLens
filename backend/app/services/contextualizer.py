@@ -5,8 +5,6 @@ from ollama import Client
 
 logger = logging.getLogger(__name__)
 
-#TODO: capire e sistemare il logging
-
 class Contextualizer:
     """Handles the contextualization of text data using a generative model via ollama."""
 
@@ -31,6 +29,7 @@ class Contextualizer:
 
         self.ollama_client = self._initialize_ollama_client()
         self._validate_ollama_connection()
+        logger.info(f"Initialized Ollama client with model '{self.generative_model_name}' at URL: {self.ollama_url}")
 
     def _initialize_ollama_client(self) -> Client:
         """Initialize the ollama client.
@@ -41,6 +40,7 @@ class Contextualizer:
         try:
             return Client(host=self.ollama_url)
         except Exception as e:
+            logger.error(f"Failed to connect to ollama service at {self.ollama_url}: {e}")
             raise ConnectionError(f"Failed to connect to ollama service at {self.ollama_url}: {e}")
 
     def _validate_ollama_connection(self):
@@ -48,8 +48,10 @@ class Contextualizer:
         try:
             models = self.ollama_client.models()
             if self.generative_model_name not in [model.name for model in models]:
+                logger.error(f"Generative model '{self.generative_model_name}' not found in ollama service.")
                 raise ValueError(f"Generative model '{self.generative_model_name}' not found in ollama service.")
         except Exception as e:
+            logger.error(f"Failed to validate connection to ollama service at {self.ollama_url}: {e}")
             raise ConnectionError(f"Failed to validate connection to ollama service at {self.ollama_url}: {e}")
     
     def contextualize(self, 
@@ -109,6 +111,7 @@ class Contextualizer:
                 logger.error(f"Error during contextualization for chunk: '{chunk[:10]}...': {e}")
                 contextualized_results.append(chunk)
 
+        logger.info(f"Contextualization completed for {len(all_texts)} chunks.")
         self._flush_ollama_cache()
         return contextualized_results
 
@@ -158,6 +161,8 @@ class Contextualizer:
                 },
                 keep_alive=-1
             )
+
+            logger.info("Document summary generated successfully.")
             return response['response'].strip()
         except Exception as e:
             logger.warning(f"Document summary generation failed: {e}")

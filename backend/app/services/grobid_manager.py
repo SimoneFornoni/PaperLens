@@ -45,7 +45,6 @@ class GROBIDManager:
             bool: True if GROBID is alive, False otherwise.
         """
         try:
-            # Implement a simple health check for GROBID
             response = requests.get(f"{self.grobid_url}/api/isalive", timeout=5)
             return response.status_code == 200
         except Exception as e:
@@ -62,11 +61,13 @@ class GROBIDManager:
             ET.Element: XML Element root of the TEI document.
         """
         if pdf_path is None or pdf_path.suffix.lower() != ".pdf":
+            logger.error(f"Provided path '{pdf_path}' is not a valid PDF file.")
             raise ValueError(f"Provided path '{pdf_path}' is not a valid file.")
         
         try:
             if not self._is_alive():
                 message = f"GROBID service is not reachable at {self.grobid_url}. Start GROBID and try again."
+                logger.error(message)
                 raise ConnectionError(message)
 
             if self.grobid_client is None:

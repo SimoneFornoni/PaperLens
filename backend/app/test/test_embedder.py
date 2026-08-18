@@ -12,12 +12,15 @@ if str(PROJECT_ROOT) not in sys.path:
 def test_embed_text():
     SUT = Embedder()
     texts = ["This is a test.", "Another test sentence."]
-    embeddings = SUT.embed_text(texts)
+
+    with patch.object(SUT, "_embed_dense_batch", return_value=[[0.1, 0.2], [0.3, 0.4]]), \
+         patch.object(SUT, "_embed_sparse_batch", return_value=[[1, 0], [0, 1]]):
+        embeddings = SUT.embed_text(texts)
 
     assert "dense" in embeddings
     assert "sparse" in embeddings
-    assert len(embeddings["dense"]) == len(texts)
-    assert len(embeddings["sparse"]) == len(texts)
+    assert len(embeddings["dense"]) == 2
+    assert len(embeddings["sparse"]) == 2
 
 def test_embed_empty_text():
     SUT = Embedder()

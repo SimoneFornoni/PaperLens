@@ -16,12 +16,14 @@ class BaseCacheHandler:
 
     def __init__(self, output_dir: str, allowed_suffix: str, cache_type: str):
         if not output_dir:
+            logger.error("Cache directory must be provided.")
             raise ValueError("Cache directory must be provided.")
 
         self.cache_dir = os.path.abspath(str(f"{output_dir}/{cache_type.lower()}_cache"))
         os.makedirs(self.cache_dir, exist_ok=True)
 
         if not os.path.isdir(self.cache_dir):
+            logger.error(f"{cache_type} cache directory '{self.cache_dir}' is not a valid directory.")
             raise ValueError(f"{cache_type} cache directory '{self.cache_dir}' is not a valid directory.")
 
         self.allowed_suffix = allowed_suffix
@@ -31,10 +33,12 @@ class BaseCacheHandler:
     def ingest_file(self, file_path: Path) -> Path:
         """Ingest a file into the cache directory, saving it with a unique hash-based filename."""
         if not file_path.is_file():
+            logger.error(f"Provided path '{file_path}' is not a valid file.")
             raise ValueError(f"Provided path '{file_path}' is not a valid file.")
 
         current_suffix = "".join(file_path.suffixes).lower()
         if current_suffix != self.allowed_suffix.lower():
+            logger.error(f"Provided file '{file_path}' is not a {self.kind_name}. Expected suffix: '{self.allowed_suffix}', got: '{current_suffix}'.")
             raise ValueError(f"Provided file '{file_path}' is not a {self.kind_name}.")
 
         file_hash = compute_hash(file_path)
@@ -64,6 +68,7 @@ class BaseCacheHandler:
         """Retrieve the path of a cached file based on its hash."""
         file_path = Path(self.cache_dir) / f"{file_hash}{self.allowed_suffix}"
         if not file_path.exists():
+            logger.error(f"{self.kind_name} with hash '{file_hash}' not found in cache.")
             raise FileNotFoundError(f"{self.kind_name} with hash '{file_hash}' not found in cache.")
         return file_path
 
