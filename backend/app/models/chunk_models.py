@@ -10,13 +10,6 @@ class ProcessedParagraph:
     sentences: List[Tuple[str, str]] = field(default_factory=list)
 
 @dataclass
-class ChunkingState:
-    """Carries the mutable state used while building extracted chunks."""
-    paragraph_idx: int
-    pending_short_para: str
-    pending_coords: List[Tuple[int, int]] = field(default_factory=list)
-
-@dataclass
 class ExtractedChunk:
     """Represents a paragraph extracted from TEI before PDF metadata is attached."""
     text: str

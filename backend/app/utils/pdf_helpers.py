@@ -1,7 +1,6 @@
 from pathlib import Path
 import hashlib
 
-
 def compute_hash(file_path: Path) -> str:
     """Compute the SHA256 hash of a file.
 

@@ -24,7 +24,7 @@ class GROBIDManager:
                 grobid_url: str = "http://localhost:8070",
                 grobid_timeout: int = 180,
                 output_dir: str = "output"):
-        """Initialize the PDFProcessor.
+        """Initialize the GrobidManager.
 
         Args:
             grobid_url (str): The URL of the GROBID service.
@@ -36,7 +36,7 @@ class GROBIDManager:
 
         self.tei_cache_handler = TEICacheHandler(output_dir)
 
-        logger.info(f"Initialized PDFProcessor with GROBID URL: {self.grobid_url}")
+        logger.info(f"Initialized GrobidManager with GROBID URL: {self.grobid_url}")
 
     def _is_alive(self) -> bool:
         """Check if the GROBID service is alive.

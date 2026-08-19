@@ -2,10 +2,9 @@
 import logging
 
 import xml.etree.ElementTree as ET
-from typing import List, Tuple, Dict
+from typing import List, Tuple
 
 from ..models.chunk_models import ProcessedParagraph
-from ..models.chunk_models import ChunkingState
 from ..models.chunk_models import ExtractedChunk
 
 logger = logging.getLogger(__name__)
@@ -13,24 +12,8 @@ logger = logging.getLogger(__name__)
 class Chunker:
     """Processes TEI XML documents to extract structured text chunks."""
 
-    # Reference section patterns to detect bibliography/references
-    REFERENCE_PATTERNS = [
-        r'^\s*references\s*$',
-        r'^\s*bibliography\s*$',
-        r'^\s*works\s+cited\s*$',
-        r'^\s*literature\s+cited\s*$',
-    ]
-    
-    # Section types to include in chunking (can be customized)
-    CONTENT_SECTIONS = {
-        'body': True,
-        'abstract': True,
-        'introduction': True,
-        'conclusion': True,
-        'results': True,
-        'methods': True,
-        'discussion': True,
-    }
+    # GROBID TEI namespace
+    TEI_NAMESPACE = {"tei": "http://www.tei-c.org/ns/1.0"}
 
     # Minimum word count before a paragraph is treated as standalone.
     MIN_PARAGRAPH_WORDS = 10
@@ -53,54 +36,37 @@ class Chunker:
         chunks = []
         full_text_parts = []
 
-        # Define TEI namespace
-        ns = {'tei': 'http://www.tei-c.org/ns/1.0'}
-
-        # Buffer to handle short paragraphs and paragraph index
-        chunking_state = ChunkingState(
-            paragraph_idx=0,
-            pending_short_para="",
-            pending_coords=[]
-        )
+        paragraph_idx = 0
 
         # Extract from abstract (each <p> is a paragraph)
-        abstract = tei_root.find('.//tei:abstract', ns)
+        abstract = tei_root.find('.//tei:abstract', self.TEI_NAMESPACE)
         if abstract is not None:
-            chunking_state = self._collect_paragraphs(
-                abstract.findall('.//tei:p', ns),
+            paragraph_idx = self._collect_paragraphs(
+                abstract.findall('.//tei:p', self.TEI_NAMESPACE),
                 "abstract",
                 chunks,
                 full_text_parts,
-                chunking_state,
-                ns,
+                paragraph_idx
             )
 
         # Extract from body
-        body = tei_root.find('.//tei:body', ns)
+        body = tei_root.find('.//tei:body', self.TEI_NAMESPACE)
         if body is not None:
-            for section_div in body.findall('.//tei:div', ns):
-                head = section_div.find('.//tei:head', ns)
+            for section_div in body.findall('.//tei:div', self.TEI_NAMESPACE):
+                head = section_div.find('.//tei:head', self.TEI_NAMESPACE)
                 head_text_raw = "".join(head.itertext()).strip() if head is not None else ""
                 section_type = self._determine_section_type(head_text_raw.lower())
                 
-                chunking_state = self._collect_paragraphs(
-                    section_div.findall('.//tei:p', ns),
+                paragraph_idx = self._collect_paragraphs(
+                    section_div.findall('.//tei:p', self.TEI_NAMESPACE),
                     section_type,
                     chunks,
                     full_text_parts,
-                    chunking_state,
-                    ns,
+                    paragraph_idx
                 )
 
-        # Handle any remaining pending short paragraph
-        if chunking_state.pending_short_para and chunks:
-            last_para = chunks[-1]
-            last_para.text = f"{last_para.text} {chunking_state.pending_short_para}"
-            last_para.sentences.extend(chunking_state.pending_coords)
-            full_text_parts[-1] = f"{full_text_parts[-1]} {chunking_state.pending_short_para}"
-
         document_text = " ".join(full_text_parts)
-        title_text = self._extract_title_from_tei(tei_root, ns)
+        title_text = self._extract_title_from_tei(tei_root)
         if title_text:
             title_block = f"Title: {title_text}"
             document_text = f"{title_block}\n\n{document_text}" if document_text else title_block
@@ -113,8 +79,7 @@ class Chunker:
                         section_type: str,
                         paragraphs: List[ExtractedChunk],
                         full_text_parts: List[str],
-                        chunking_state: ChunkingState,
-                        ns: Dict[str, str]) -> ChunkingState:
+                        paragraph_idx: int) -> int:
         """ Process a list of <p> elements to collect paragraphs, handling short paragraphs.
 
         Args:
@@ -122,14 +87,13 @@ class Chunker:
             section_type (str): Section type for categorization.
             paragraphs (List[ExtractedParagraph]): List to append extracted paragraphs to.
             full_text_parts (List[str]): List to append full text parts.
-            chunking_state (ChunkingState): Current state of paragraph index and pending short paragraph.
-            ns (Dict[str, str]): Namespace dictionary for XML parsing.
+            paragraph_idx (int): Index for the next standalone chunk.
         
         Returns:
-            ChunkingState: Updated state after processing paragraphs.
+            int: Index for the next standalone chunk.
         """
         for p_elem in p_elements:
-            processed_paragraph = self._process_paragraph(p_elem, ns)
+            processed_paragraph = self._process_paragraph(p_elem)
             p_text = processed_paragraph.text
             sentences_coords = processed_paragraph.sentences
             page_num = processed_paragraph.page_num
@@ -137,25 +101,31 @@ class Chunker:
             if not p_text:
                 continue
 
+            if len(p_text.split()) < self.MIN_PARAGRAPH_WORDS and paragraphs:
+                previous_chunk = paragraphs[-1]
+                previous_chunk.text = f"{previous_chunk.text} {p_text}"
+                previous_chunk.sentences.extend(sentences_coords)
+                full_text_parts[-1] = f"{full_text_parts[-1]} {p_text}"
+                continue
+
             extracted_para = ExtractedChunk(
                 text=p_text,
                 page_num=page_num,
-                chunk_idx=chunking_state.paragraph_idx,
+                chunk_idx=paragraph_idx,
                 section=section_type,
                 sentences=sentences_coords
             )
             paragraphs.append(extracted_para)
             full_text_parts.append(p_text)
-            chunking_state.paragraph_idx += 1
+            paragraph_idx += 1
 
-        return chunking_state
+        return paragraph_idx
 
-    def _process_paragraph(self, p_elem: ET.Element, ns: Dict[str, str]) -> ProcessedParagraph:
+    def _process_paragraph(self, p_elem: ET.Element) -> ProcessedParagraph:
         """Process a single <p> element to extract text, sentences, and page number.
 
         Args:
             p_elem (ET.Element): The <p> element to process.
-            ns (Dict[str, str]): Namespace dictionary for XML parsing.
 
         Returns:
             ProcessedParagraph: Extracted paragraph text, list of sentences with coordinates
@@ -164,7 +134,7 @@ class Chunker:
         senteces_coords = []
         page_num = 0
 
-        for s in p_elem.findall('.//tei:s', ns):
+        for s in p_elem.findall('.//tei:s', self.TEI_NAMESPACE):
             sentence_text = " ".join("".join(s.itertext()).split())
             coords = s.get('coords', '')
 
@@ -205,12 +175,11 @@ class Chunker:
             if key in head_text: return value
         return 'body'
 
-    def _extract_title_from_tei(self, tei_root: ET.Element, ns: Dict[str, str]) -> str:
+    def _extract_title_from_tei(self, tei_root: ET.Element) -> str:
         """Extract document title from TEI header when available.
         
         Args:
             tei_root: Root element of TEI XML.
-            ns: Namespace dictionary for XML parsing.
             
         Returns:
             Extracted title text or empty string if not found.
@@ -228,7 +197,7 @@ class Chunker:
         ]
 
         for xpath in title_xpaths:
-            for title_elem in tei_root.findall(xpath, ns):
+            for title_elem in tei_root.findall(xpath, self.TEI_NAMESPACE):
                 title_text = " ".join("".join(title_elem.itertext()).split())
                 if title_text:
                     return title_text
