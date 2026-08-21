@@ -33,8 +33,12 @@ def test_contextualize():
         )
 
     assert len(results) == 2
-    assert results[0] == "Contesto per il chunk\n\nChunk 1"
-    assert results[1] == "Contesto per il chunk\n\nChunk 2"
+    assert results[0].original_text == "Chunk 1"
+    assert results[0].contextualized_text == "Contesto per il chunk\n\nChunk 1"
+    assert results[0].context_text == "Contesto per il chunk"
+    assert results[1].original_text == "Chunk 2"
+    assert results[1].contextualized_text == "Contesto per il chunk\n\nChunk 2"
+    assert results[1].context_text == "Contesto per il chunk"
 
 def test_contextualize_raises_for_missing_model():
     mock_model = SimpleNamespace(name="altro_modello:latest")
@@ -66,5 +70,8 @@ def test_contextualize_fallback_on_generate_exception():
             all_texts=["Chunk con errore"]
         )
 
-    assert results[0] == "Chunk con errore"
+    assert len(results) == 1
+    assert results[0].original_text == "Chunk con errore"
+    assert results[0].contextualized_text == "Chunk con errore"
+    assert results[0].context_text == ""
     

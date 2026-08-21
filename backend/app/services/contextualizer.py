@@ -3,6 +3,8 @@ import logging
 from typing import List
 from ollama import Client
 
+from backend.app.models.chunk_models import ContextualizedChunk
+
 logger = logging.getLogger(__name__)
 
 class Contextualizer:
@@ -56,7 +58,7 @@ class Contextualizer:
     
     def contextualize(self, 
                       document_text: str,
-                      all_texts: list[str]) -> List[str]:
+                      all_texts: list[str]) -> List[ContextualizedChunk]:
         """Generate contextualized chunks of text by prompting an LLM to provide context for each chunk.
         
         Args:
@@ -64,7 +66,8 @@ class Contextualizer:
             all_texts (list[str]): A list of text chunks to contextualize.
             
         Returns:
-            List[str]: A list of contextualized text chunks.
+            List[ContextualizedChunk]: The original, contextualized, and
+                context-only text for each chunk.
         """
         contextualized_results = []
 
@@ -106,10 +109,18 @@ class Contextualizer:
                 context_prefix = context_prefix.replace("```", "").strip()
 
                 full_chunk = f"{context_prefix}\n\n{chunk}" if context_prefix else chunk
-                contextualized_results.append(full_chunk)
+                contextualized_results.append(ContextualizedChunk(
+                    original_text=chunk,
+                    contextualized_text=full_chunk,
+                    context_text=context_prefix,
+                ))
             except Exception as e:
                 logger.error(f"Error during contextualization for chunk: '{chunk[:10]}...': {e}")
-                contextualized_results.append(chunk)
+                contextualized_results.append(ContextualizedChunk(
+                    original_text=chunk,
+                    contextualized_text=chunk,
+                    context_text="",
+                ))
 
         logger.info(f"Contextualization completed for {len(all_texts)} chunks.")
         self._flush_ollama_cache()

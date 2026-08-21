@@ -1,6 +1,6 @@
 """Data models for chunk elaboration and extraction."""
 from dataclasses import dataclass, field
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 @dataclass
 class ProcessedParagraph:
@@ -19,13 +19,21 @@ class ExtractedChunk:
     sentences: List[Tuple[str, str]] = field(default_factory=list)
 
 @dataclass
+class ContextualizedChunk:
+    """Represents a chunk together with its generated contextualization."""
+    original_text: str
+    contextualized_text: str
+    context_text: str
+
+@dataclass
 class Chunk:
-    """Represents a paragraph-level chunk for QA."""
+    """Represents a chunk of text with associated metadata."""
     text: str
-    page_num: int
-    chunk_idx: int
+    context_text: str
     title: str
     pdf_hash: str
-    section: str = "body" 
-    sentence_count: int = 0 
-    sentences: List[Tuple[str, str]] = field(default_factory=list) 
+    section: str
+    page_num: int
+    chunk_idx: int
+    sentence_count: int
+    sentences: List[Tuple[str, str]] = field(default_factory=list)
