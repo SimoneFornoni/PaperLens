@@ -31,7 +31,7 @@ class Chunk:
     text: str
     context_text: str
     title: str
-    pdf_hash: str
+    document_hash: str
     section: str
     page_num: int
     chunk_idx: int
