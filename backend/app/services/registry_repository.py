@@ -1,7 +1,7 @@
 """Module for managing the registry collection in Qdrant."""
 import logging
 import uuid
-from typing import List
+from typing import List, Tuple
 
 from backend.app.services.qdrant_connection_provider import QdrantConnectionProvider
 from qdrant_client.http import models as qm
@@ -19,6 +19,7 @@ class RegistryRepository:
         """
         self._connection = connection
         self.collection_name = "PaperLens_Registry"
+        self.reserved_titles: List[str] = []
         self._ensure_collection()
 
     def _ensure_collection(self):
@@ -118,7 +119,10 @@ class RegistryRepository:
                 ]
             )
 
-    def is_document_registered(self, document_hash: str, model: str) -> bool:
+        if title in self.reserved_titles:
+            self.reserved_titles.remove(title)
+
+    def is_document_registered(self, document_hash: str, model: str) -> Tuple[str, bool]:
         """Checks if a document is registered in the registry collection for a specific model.
         
         Args:
@@ -126,7 +130,7 @@ class RegistryRepository:
             model (str): The embedding model to check against.
         
         Returns:
-            bool: True if the document is registered with the specified model, False otherwise.
+            Tuple[str, bool]: A tuple containing the title of the document and a boolean indicating if it is registered.
         """
         registry_id = self._generate_point_id(document_hash)
         flt = qm.Filter(
@@ -146,20 +150,20 @@ class RegistryRepository:
                     collection_name=self.collection_name,
                     scroll_filter=flt,
                     limit=1,
-                    with_payload=False,
+                    with_payload=["title"],
                     with_vectors=False,
                     offset=next_offset
                 )
 
                 if points:
-                    return True
+                    return points[0].payload.get("title", ""), True
 
                 if next_offset is None:
                     break
         except Exception as e:
             logger.error(f"Error while checking if document is indexed: {e}")
             raise Exception(f"Error while checking if document is indexed: {e}")
-        return False
+        return "", False
 
     def is_title_registered(self, title: str) -> bool:
         """Checks if a title is already registered in the whole registry collection.
@@ -200,6 +204,20 @@ class RegistryRepository:
             logger.error(f"Error while checking if title is used: {e}")
             raise Exception(f"Error while checking if title is used: {e}")
         return False
+
+    def reserve_title(self, title: str):
+        """Reserves a title in the registry collection to prevent future conflicts.
+        
+        Args:
+            title (str): The title to reserve.
+        """
+        if not title:
+            raise ValueError("Title must be provided.")
+
+        if self.is_title_registered(title):
+            raise ValueError(f"Title '{title}' is already registered.")
+
+        self.reserved_titles.append(title)
 
     def list_registered_documents(self, model: str) -> List[str]:
         """Lists all registered document titles for a specific model in the registry collection.

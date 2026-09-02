@@ -54,7 +54,7 @@ def test_is_document_registered():
 
         result = SUT.is_document_registered(document_hash, model)
 
-        assert result is False
+        assert result == ("", False)
 
 def test_is_document_registered_with_existing_document():
     with patch('backend.app.services.registry_repository.QdrantConnectionProvider') as MockConnection:
@@ -66,11 +66,14 @@ def test_is_document_registered_with_existing_document():
         document_hash = "hash1"
         model = "Model 1"
 
-        mock_client.scroll.return_value = ([SimpleNamespace(id="point_id")], None)
+        mock_client.scroll.return_value = (
+            [SimpleNamespace(id="point_id", payload={"doucument_hash": "hash1", "title": "Title 1", "models": ["Model 1"]})],
+            None
+        )
 
         result = SUT.is_document_registered(document_hash, model)
 
-        assert result is True
+        assert result == ("Title 1", True)
 
 def test_is_title_registered():
     with patch('backend.app.services.registry_repository.QdrantConnectionProvider') as MockConnection:
