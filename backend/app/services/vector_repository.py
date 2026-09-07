@@ -2,12 +2,12 @@
 
 import logging
 from qdrant_client.http import models as qm
-from typing import List, Dict, Optional
+from typing import List, Dict
 import uuid
 
-from backend.app.utils.sanitizer import sanitize_model_name
-from backend.app.models.chunk_models import Chunk
-from backend.app.services.qdrant_connection_provider import QdrantConnectionProvider
+from app.utils.sanitizer import sanitize_model_name
+from app.models.domain import Chunk
+from app.services.qdrant_connection_provider import QdrantConnectionProvider
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ class VectorRepository:
                 vectors_config=qm.VectorParams(
                     size=self.dense_vector_size, 
                     distance=qm.Distance.COSINE,
-                    data_type=qm.Datatype.FLOAT16,
+                    datatype=qm.Datatype.FLOAT16,
                     on_disk=True
                 ),
                 sparse_vectors_config={

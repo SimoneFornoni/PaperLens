@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from .base_cache_handler import BaseCacheHandler
+from app.services.base_cache_handler import BaseCacheHandler
 
 class TEICacheHandler(BaseCacheHandler):
     """Handles TEI cache, including saving, retrieving, and deleting TEI files."""
@@ -10,9 +10,9 @@ class TEICacheHandler(BaseCacheHandler):
     def __init__(self, output_dir: str | Path):
         super().__init__(output_dir, ".tei.xml", "TEI")
 
-    def ingest_tei(self, file_path: Path) -> Path:
+    def add_tei(self, file_path: Path) -> Path:
         """Ingest a TEI file into the cache directory."""
-        return self.ingest_file(file_path)
+        return self.add_file(file_path)
 
     def get_tei_path(self, tei_hash: str) -> Path:
         """Retrieve the path of a cached TEI file based on its hash."""

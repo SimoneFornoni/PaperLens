@@ -1,9 +1,10 @@
 """Module for managing the registry collection in Qdrant."""
 import logging
 import uuid
-from typing import List, Tuple
+from typing import List
 
-from backend.app.services.qdrant_connection_provider import QdrantConnectionProvider
+from app.services.qdrant_connection_provider import QdrantConnectionProvider
+from app.models.domain import DocumentRecord
 from qdrant_client.http import models as qm
 
 logger = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ class RegistryRepository:
     def _ensure_collection(self):
         """Ensures that the registry collection exists in Qdrant, creating it if necessary."""
         if not self._connection.client.collection_exists(self.collection_name):
-            self._connection.create_collection(
+            self._connection.client.create_collection(
                 collection_name=self.collection_name,
                 vectors_config=None
             )
@@ -122,24 +123,19 @@ class RegistryRepository:
         if title in self.reserved_titles:
             self.reserved_titles.remove(title)
 
-    def is_document_registered(self, document_hash: str, model: str) -> Tuple[str, bool]:
-        """Checks if a document is registered in the registry collection for a specific model.
+    def is_document_registered(self, document_hash: str) -> DocumentRecord | None:
+        """Checks if a document is registered in the registry collection.
         
         Args:
             document_hash (str): The hash of the document.
-            model (str): The embedding model to check against.
         
         Returns:
-            Tuple[str, bool]: A tuple containing the title of the document and a boolean indicating if it is registered.
+            DocumentRecord | None: A DocumentRecord with the document's metadata if registered, None otherwise.
         """
         registry_id = self._generate_point_id(document_hash)
         flt = qm.Filter(
             must=[
-                qm.HasIdCondition(has_id=[registry_id]),
-                qm.FieldCondition(
-                    key="models",
-                    match=qm.MatchValue(value=model)
-                )
+                qm.HasIdCondition(has_id=[registry_id])
             ]
         )
 
@@ -150,20 +146,23 @@ class RegistryRepository:
                     collection_name=self.collection_name,
                     scroll_filter=flt,
                     limit=1,
-                    with_payload=["title"],
+                    with_payload=["title", "models"],
                     with_vectors=False,
                     offset=next_offset
                 )
 
                 if points:
-                    return points[0].payload.get("title", ""), True
-
+                    return DocumentRecord(
+                        document_hash=document_hash,
+                        title=points[0].payload.get("title", ""),
+                        models=frozenset(points[0].payload.get("models", []))
+                    )
                 if next_offset is None:
                     break
         except Exception as e:
             logger.error(f"Error while checking if document is indexed: {e}")
             raise Exception(f"Error while checking if document is indexed: {e}")
-        return "", False
+        return None
 
     def is_title_registered(self, title: str) -> bool:
         """Checks if a title is already registered in the whole registry collection.

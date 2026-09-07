@@ -1,6 +1,8 @@
-"""Data models for chunk elaboration and extraction."""
+"""Data models for representing structured information inside the application."""
 from dataclasses import dataclass, field
-from typing import List, Tuple, Optional
+from typing import List, Tuple
+
+# Models for chunk elaboration
 
 @dataclass
 class ProcessedParagraph:
@@ -37,3 +39,12 @@ class Chunk:
     chunk_idx: int
     sentence_count: int
     sentences: List[Tuple[str, str]] = field(default_factory=list)
+
+# Models for the registry collection in Qdrant
+
+@dataclass(frozen=True)
+class DocumentRecord:
+    """Represents a document with its metadata."""
+    title: str
+    document_hash: str
+    models: frozenset[str] = field(default_factory=frozenset)

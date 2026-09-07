@@ -4,8 +4,8 @@ import logging
 import xml.etree.ElementTree as ET
 from typing import List, Tuple
 
-from ..models.chunk_models import ProcessedParagraph
-from ..models.chunk_models import ExtractedChunk
+from app.models.domain import ProcessedParagraph
+from app.models.domain import ExtractedChunk
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class Chunker:
             tei_root (ET.Element): The root element of the TEI XML document.
             
         Returns:
-            Tuple[List[ExtractedParagraph], str]: A tuple containing a list of extracted paragraphs 
+            Tuple[List[ExtractedChunk], str]: A tuple containing a list of extracted chunks 
                                                   and the full document text.
         """
         if tei_root is None:
@@ -85,7 +85,7 @@ class Chunker:
         Args:
             p_elements (List[ET.Element]): List of <p> elements to process.
             section_type (str): Section type for categorization.
-            paragraphs (List[ExtractedParagraph]): List to append extracted paragraphs to.
+            paragraphs (List[ExtractedChunk]): List to append extracted chunks to.
             full_text_parts (List[str]): List to append full text parts.
             paragraph_idx (int): Index for the next standalone chunk.
         

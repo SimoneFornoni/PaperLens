@@ -3,7 +3,7 @@ from unittest.mock import patch
 from types import SimpleNamespace
 from pathlib import Path
 
-from backend.app.services.vector_repository import VectorRepository
+from app.services.vector_repository import VectorRepository
 
 import sys
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -11,7 +11,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 def test_upsert_chunks():
-    with patch('backend.app.services.vector_repository.QdrantConnectionProvider') as MockConnection:
+    with patch('app.services.vector_repository.QdrantConnectionProvider') as MockConnection:
         mock_connection = MockConnection.return_value
         mock_client = mock_connection.client
 
@@ -50,7 +50,7 @@ def test_upsert_chunks():
         assert result == len(chunks)
 
 def test_upsert_chunks_raises_for_length_mismatch():
-    with patch('backend.app.services.vector_repository.QdrantConnectionProvider') as MockConnection:
+    with patch('app.services.vector_repository.QdrantConnectionProvider') as MockConnection:
         mock_connection = MockConnection.return_value
         mock_client = mock_connection.client
 

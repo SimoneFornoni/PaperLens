@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from .base_cache_handler import BaseCacheHandler
+from app.services.base_cache_handler import BaseCacheHandler
 
 class PDFCacheHandler(BaseCacheHandler):
     """Handles PDF cache, including saving, retrieving, and deleting PDF files."""
@@ -10,9 +10,9 @@ class PDFCacheHandler(BaseCacheHandler):
     def __init__(self, output_dir: str | Path):
         super().__init__(output_dir, ".pdf", "PDF")
 
-    def ingest_pdf(self, file_path: Path) -> Path:
+    def add_pdf(self, file_path: Path) -> Path:
         """Ingest a PDF file into the cache directory."""
-        return self.ingest_file(file_path)
+        return self.add_file(file_path)
 
     def get_pdf_path(self, pdf_hash: str) -> Path:
         """Retrieve the path of a cached PDF file based on its hash."""

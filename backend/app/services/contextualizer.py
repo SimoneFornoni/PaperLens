@@ -3,7 +3,7 @@ import logging
 from typing import List
 from ollama import Client
 
-from backend.app.models.chunk_models import ContextualizedChunk
+from app.models.domain import ContextualizedChunk
 
 logger = logging.getLogger(__name__)
 
@@ -57,8 +57,8 @@ class Contextualizer:
             raise ConnectionError(f"Failed to validate connection to ollama service at {self.ollama_url}: {e}")
     
     def contextualize(self, 
-                      document_text: str,
-                      all_texts: list[str]) -> List[ContextualizedChunk]:
+                      all_texts: list[str],
+                      document_text: str) -> List[ContextualizedChunk]:
         """Generate contextualized chunks of text by prompting an LLM to provide context for each chunk.
         
         Args:

@@ -10,7 +10,7 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 from grobid_client.grobid_client import GrobidClient
 
-from .tei_cache_handler import TEICacheHandler
+from app.services.tei_cache_handler import TEICacheHandler
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ class GROBIDManager:
     def __init__(self, 
                 grobid_url: str = "http://localhost:8070",
                 grobid_timeout: int = 180,
-                output_dir: str = "output"):
+                output_dir: Path = Path("output")):
         """Initialize the GrobidManager.
 
         Args:
@@ -106,7 +106,7 @@ class GROBIDManager:
                         content = tei_path.read_bytes()
                         root = ET.fromstring(content)
                         try:
-                            _ = self.tei_cache_handler.ingest_tei(tei_path)
+                            _ = self.tei_cache_handler.add_tei(tei_path)
                         except Exception as cache_error:
                             logger.warning(f"TEI cache write failed for {pdf_path}: {cache_error}")
 
