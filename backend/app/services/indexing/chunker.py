@@ -4,8 +4,9 @@ import logging
 import xml.etree.ElementTree as ET
 from typing import List, Tuple
 
-from app.models.domain import ProcessedParagraph
-from app.models.domain import ExtractedChunk
+from app.services.indexing.models import ProcessedParagraph
+from app.services.indexing.models import ExtractedChunk
+from app.models.domain import Sentence
 
 logger = logging.getLogger(__name__)
 
@@ -131,7 +132,7 @@ class Chunker:
             ProcessedParagraph: Extracted paragraph text, list of sentences with coordinates
                                 and page number.
         """
-        senteces_coords = []
+        sentences_coords = []
         page_num = 0
 
         for s in p_elem.findall('.//tei:s', self.TEI_NAMESPACE):
@@ -139,7 +140,7 @@ class Chunker:
             coords = s.get('coords', '')
 
             if sentence_text:
-                senteces_coords.append((sentence_text, coords))
+                sentences_coords.append(Sentence(text=sentence_text, coords=coords))
                 if page_num == 0 and coords:
                     try:
                         page_num = int(coords.split(',')[0]) - 1
@@ -147,14 +148,14 @@ class Chunker:
                         pass
 
         # Handle case where no <s> elements are found, but <p> has text
-        if not senteces_coords:
+        if not sentences_coords:
             paragraph_text = " ".join("".join(p_elem.itertext()).split())
             if paragraph_text:
-                senteces_coords.append((paragraph_text, ""))
-                return ProcessedParagraph(text=paragraph_text, page_num=page_num, sentences=senteces_coords)
+                sentences_coords.append(Sentence(text=paragraph_text, coords=p_elem.get('coords', '')))
+                return ProcessedParagraph(text=paragraph_text, page_num=page_num, sentences=sentences_coords)
 
-        paragraph_text = ' '.join([sent for sent, _ in senteces_coords])
-        return ProcessedParagraph(text=paragraph_text, page_num=page_num, sentences=senteces_coords)
+        paragraph_text = ' '.join([sent for sent, _ in sentences_coords])
+        return ProcessedParagraph(text=paragraph_text, page_num=page_num, sentences=sentences_coords)
 
     def _determine_section_type(self, head_text):
         """Determine section type based on head text, using simple keyword mapping.

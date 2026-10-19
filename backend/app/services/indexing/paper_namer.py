@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 from typing import Dict
 
 from app.utils.sanitizer import sanitize_filename
-from app.services.registry_repository import RegistryRepository
+from app.repositories.registry_repository import RegistryRepository
 
 logger = logging.getLogger(__name__)
 

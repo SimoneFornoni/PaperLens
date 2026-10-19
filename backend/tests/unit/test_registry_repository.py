@@ -1,7 +1,7 @@
 from unittest.mock import patch
 from types import SimpleNamespace
 
-from app.services.registry_repository import RegistryRepository
+from app.repositories.registry_repository import RegistryRepository
 
 def test_register_document():
     with patch('app.services.registry_repository.QdrantConnectionProvider') as MockConnection:

@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import patch
 from pathlib import Path
 
-from app.services.grobid_manager import GROBIDManager
+from app.services.indexing.pdf_parser import GROBIDManager
 
 import sys
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -26,16 +26,19 @@ def test_parse_pdf(tmp_path):
         return None
 
     with patch.object(SUT, '_is_alive', return_value=True), \
+         patch('app.services.grobid_manager.compute_hash', return_value='pdfhash'), \
          patch.object(SUT, 'tei_cache_handler') as mock_cache_handler, \
-            patch('app.services.grobid_manager.tempfile.mkdtemp', side_effect=[str(input_dir), str(output_dir)]), \
-            patch('app.services.grobid_manager.GrobidClient') as mock_grobid_client:
+         patch('app.services.grobid_manager.tempfile.mkdtemp', side_effect=[str(input_dir), str(output_dir)]), \
+         patch('app.services.grobid_manager.GrobidClient') as mock_grobid_client:
         mock_grobid_instance = mock_grobid_client.return_value
         mock_grobid_instance.process.side_effect = write_tei_result
 
         _ = SUT.parse_pdf(mocked_pdf)
 
     assert mock_grobid_instance.process.called
-    assert mock_cache_handler.add_tei.called
+    mock_cache_handler.add_tei.assert_called_once_with(
+        Path(output_dir) / "test.tei.xml", document_hash="pdfhash"
+    )
 
 def test_parse_pdf_raises_for_non_pdf_file(tmp_path):
     SUT = GROBIDManager(grobid_url="http://localhost:8070", output_dir=tmp_path)

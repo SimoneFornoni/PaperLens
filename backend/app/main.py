@@ -1,18 +1,20 @@
 from pathlib import Path
 
-from app.services.qdrant_connection_provider import QdrantConnectionProvider
-from app.services.registry_repository import RegistryRepository
-from app.services.document_ingestor import DocumentIngestor
-from app.services.grobid_manager import GROBIDManager
-from app.services.chunker import Chunker
-from app.services.contextualizer import Contextualizer
-from app.services.embedder import Embedder
-from app.services.paper_namer import PaperNamer
-from app.services.vector_repository import VectorRepository
+from app.repositories.qdrant_connection_provider import QdrantConnectionProvider
+from app.repositories.registry_repository import RegistryRepository
+from app.services.indexing.document_ingestor import DocumentIngestor
+from app.services.indexing.pdf_parser import GROBIDManager
+from app.services.indexing.chunker import Chunker
+from app.services.indexing.contextualizer import Contextualizer
+from app.services.indexing.embedder import Embedder
+from app.services.indexing.paper_namer import PaperNamer
+from app.repositories.vector_repository import VectorRepository
 
 from app.models.domain import Chunk, ContextualizedChunk
 
 # TODO: Add rollback mechanism
+# TODO: Non sono completamente sicuro del riuso del file tei in caso ci sia già, capire se l'ho fatto
+# FIXME: Lo sparse vector viene sempre salvato vuoto... non so perché
 def main():
     output_dir = Path("C:/Progetti Git/PaperLens/output")
     document_path = Path("C:/Progetti Git/Tesi/articles/Test/RAG_Advanced.pdf")
@@ -35,10 +37,7 @@ def main():
         print(f"Ingestion result: {result}")
 
         grobid_manager = GROBIDManager(grobid_url=grobid_url, output_dir=output_dir)
-        et_element = grobid_manager.parse_pdf(
-            document_path,
-            document_hash=result.get("document_hash"),
-        )
+        et_element = grobid_manager.parse_pdf(document_path)
         print(f"TEI XML generated at: {et_element}")
 
         paper_namer = PaperNamer(registry_repo=registry_repo)

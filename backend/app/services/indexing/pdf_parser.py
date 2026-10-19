@@ -10,11 +10,12 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 from grobid_client.grobid_client import GrobidClient
 
-from app.services.tei_cache_handler import TEICacheHandler
+from app.services.caches.tei_cache_handler import TEICacheHandler
+from app.utils.pdf_helpers import compute_hash
 
 logger = logging.getLogger(__name__)
 
-class GROBIDManager:
+class PDFParser:
     """Handles PDF parsing and text extraction using GROBID."""
     
     # Serialize calls to GROBID to avoid exhausting its internal pool
@@ -106,7 +107,10 @@ class GROBIDManager:
                         content = tei_path.read_bytes()
                         root = ET.fromstring(content)
                         try:
-                            _ = self.tei_cache_handler.add_tei(tei_path)
+                            document_hash = compute_hash(pdf_path)
+                            _ = self.tei_cache_handler.add_tei(
+                                tei_path, document_hash=document_hash
+                            )
                         except Exception as cache_error:
                             logger.warning(f"TEI cache write failed for {pdf_path}: {cache_error}")
 

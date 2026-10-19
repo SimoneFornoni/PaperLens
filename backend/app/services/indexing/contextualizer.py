@@ -3,7 +3,7 @@ import logging
 from typing import List
 from ollama import Client
 
-from app.models.domain import ContextualizedChunk
+from app.services.indexing.models import ContextualizedChunk
 
 logger = logging.getLogger(__name__)
 

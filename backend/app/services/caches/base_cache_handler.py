@@ -1,11 +1,10 @@
 """Generic cache handler for storing and retrieving files by hash."""
 
-from __future__ import annotations
-
 import logging
 import os
 from pathlib import Path
 from typing import List
+import re
 
 from app.utils.pdf_helpers import compute_hash
 
@@ -37,11 +36,12 @@ class BaseCacheHandler:
         self.kind_name = cache_type
         logger.info(f"{cache_type} cache directory set to: {self.cache_dir}")
 
-    def add_file(self, file_path: Path) -> Path:
+    def add_file(self, file_path: Path, document_hash: str) -> Path:
         """Adds a file into the cache directory, saving it with a unique hash-based filename.
         
         Args:
             file_path (Path): The path to the file to be cached.
+            document_hash (str): The SHA-256 hash of the file content to be used as the cache key.
             
         Returns:
             Path: The path to the cached file in the cache directory.
@@ -50,16 +50,19 @@ class BaseCacheHandler:
             logger.error(f"Provided path '{file_path}' is not a valid file.")
             raise ValueError(f"Provided path '{file_path}' is not a valid file.")
 
+        if re.match(r"^[a-fA-F0-9]{64}$", document_hash) is None:
+            logger.error(f"Provided hash '{document_hash}' is not a valid SHA-256 hash.")
+            raise ValueError(f"Provided hash '{document_hash}' is not a valid SHA-256 hash.")
+
         current_suffix = "".join(file_path.suffixes).lower()
         if not current_suffix.endswith(self.allowed_suffix.lower()):
             logger.error(f"Provided file '{file_path}' is not a {self.kind_name}. Expected suffix: '{self.allowed_suffix}', got: '{current_suffix}'.")
             raise ValueError(f"Provided file '{file_path}' is not a {self.kind_name}.")
 
-        file_hash = compute_hash(file_path)
-        destination = Path(self.cache_dir) / f"{file_hash}{self.allowed_suffix}"
+        destination = Path(self.cache_dir) / f"{document_hash}{self.allowed_suffix}"
 
         if destination.exists():
-            logger.info(f"{self.kind_name} '{file_path}' already exists in cache as '{destination}'.")
+            logger.warning(f"{self.kind_name} '{file_path}' already exists in cache as '{destination}'.")
             return destination
 
         try:

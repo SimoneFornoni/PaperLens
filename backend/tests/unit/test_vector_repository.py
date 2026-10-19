@@ -3,7 +3,7 @@ from unittest.mock import patch
 from types import SimpleNamespace
 from pathlib import Path
 
-from app.services.vector_repository import VectorRepository
+from app.repositories.vector_repository import VectorRepository
 
 import sys
 PROJECT_ROOT = Path(__file__).resolve().parents[3]

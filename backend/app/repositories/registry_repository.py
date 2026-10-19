@@ -3,8 +3,8 @@ import logging
 import uuid
 from typing import List
 
-from app.services.qdrant_connection_provider import QdrantConnectionProvider
-from app.models.domain import DocumentRecord
+from app.repositories.qdrant_connection_provider import QdrantConnectionProvider
+from app.repositories.models import RegistryEntry
 from qdrant_client.http import models as qm
 
 logger = logging.getLogger(__name__)
@@ -123,7 +123,7 @@ class RegistryRepository:
         if title in self.reserved_titles:
             self.reserved_titles.remove(title)
 
-    def is_document_registered(self, document_hash: str) -> DocumentRecord | None:
+    def is_document_registered(self, document_hash: str) -> RegistryEntry | None:
         """Checks if a document is registered in the registry collection.
         
         Args:

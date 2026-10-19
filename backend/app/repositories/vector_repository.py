@@ -7,7 +7,7 @@ import uuid
 
 from app.utils.sanitizer import sanitize_model_name
 from app.models.domain import Chunk
-from app.services.qdrant_connection_provider import QdrantConnectionProvider
+from app.repositories.qdrant_connection_provider import QdrantConnectionProvider
 
 logger = logging.getLogger(__name__)
 
@@ -44,12 +44,14 @@ class VectorRepository:
                     m=16, 
                     ef_construct=100
                 ),
-                vectors_config=qm.VectorParams(
-                    size=self.dense_vector_size, 
-                    distance=qm.Distance.COSINE,
-                    datatype=qm.Datatype.FLOAT16,
-                    on_disk=True
-                ),
+                vectors_config={
+                    "dense_vector": qm.VectorParams(
+                        size=self.dense_vector_size, 
+                        distance=qm.Distance.COSINE,
+                        datatype=qm.Datatype.FLOAT16,
+                        on_disk=True
+                    )
+                },
                 sparse_vectors_config={
                     "sparse_vector": qm.SparseVectorParams(
                         modifier=qm.Modifier.IDF,

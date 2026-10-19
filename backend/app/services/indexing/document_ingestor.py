@@ -3,8 +3,8 @@ import logging
 from pathlib import Path
 from typing import Dict
 
-from app.services.pdf_cache_handler import PDFCacheHandler
-from app.services.registry_repository import RegistryRepository
+from app.services.caches.pdf_cache_handler import PDFCacheHandler
+from app.repositories.registry_repository import RegistryRepository
 from app.utils.pdf_helpers import compute_hash
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ class DocumentIngestor:
                 "document_hash": document_hash
             }
             
-        self.pdf_cache_handler.add_pdf(document_path_obj)
+        self.pdf_cache_handler.add_pdf(document_path_obj, document_hash=document_hash)
         logger.info(f"Document {document_path} has been ingested into the cache.")
         return {
             "message": f"Document ingested successfully.",
