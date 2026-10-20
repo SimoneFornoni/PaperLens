@@ -23,13 +23,19 @@ def test_register_document():
         SUT.register_document(document_hash, title, model)
 
         assert mock_client.upsert.call_count == 1
+        payload = mock_client.upsert.call_args.kwargs["points"][0].payload
+        assert payload == {
+            "document_hash": document_hash,
+            "title": title,
+            "models": [model],
+        }
 
 def test_register_document_with_different_model():
     with patch('app.repositories.registry_repository.QdrantConnectionProvider') as MockConnection:
         mock_connection = MockConnection.return_value
         mock_client = mock_connection.client
         mock_client.retrieve.side_effect = [
-            [SimpleNamespace(id="point_id", payload={"doucument_hash": "hash1", "title": "Title 1", "models": ["Model 1"]})],
+            [SimpleNamespace(id="point_id", payload={"document_hash": "hash1", "title": "Title 1", "models": ["Model 1"]})],
             []
         ]
 
@@ -42,6 +48,11 @@ def test_register_document_with_different_model():
         SUT.register_document(document_hash, title, model)
 
         assert mock_client.set_payload.call_count == 1
+        assert mock_client.set_payload.call_args.kwargs["payload"] == {
+            "document_hash": document_hash,
+            "title": title,
+            "models": ["Model 1", model],
+        }
 
 def test_is_document_registered():
     with patch('app.repositories.registry_repository.QdrantConnectionProvider') as MockConnection:
@@ -128,4 +139,3 @@ def test_list_registered_documents():
         assert len(result) == 2
         assert result[0] == "Title 1"
         assert result[1] == "Title 2"
-

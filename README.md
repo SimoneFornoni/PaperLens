@@ -1,6 +1,14 @@
 # PaperLens
 Question-answering system for scientific papers with a RAG pipeline: indexing → retrieval → extractive QA.
 
+# Run
+
+```powershell
+cd backend
+uv run pytest
+uv run python -m app.main
+```
+
 ## Resume
 The system developed is a Retrieval-Augmented Generation (RAG) application designed to support scientific literature searches. The main objective is not to generate an answer directly, but to precisely identify the paragraphs in scientific articles that contain the information requested by the user, highlighting the sentences deemed most relevant within the documents. In this way, the system keeps the researcher at the center of the decision-making process, providing both the extracted answer and the original context from which it comes.
 

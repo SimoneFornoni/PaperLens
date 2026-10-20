@@ -90,7 +90,7 @@ class RegistryRepository:
             if model not in existing_models:
                 existing_models.append(model)
                 updated_payload = {
-                    "doucument_hash": document_hash,
+                    "document_hash": document_hash,
                     "title": title,
                     "models": existing_models
                 }
@@ -104,7 +104,7 @@ class RegistryRepository:
                 logger.warning(f"Document with hash '{document_hash}' is already registered with model '{model}'.")
         else:
             payload = {
-                "doucument_hash": document_hash,
+                "document_hash": document_hash,
                 "title": title,
                 "models": [model]
             }
