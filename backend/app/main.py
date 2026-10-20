@@ -2,8 +2,6 @@ from pathlib import Path
 
 from app.services.indexing.indexing_service import IndexingService
 
-# TODO: fare indexing service
-# TODO: Add rollback mechanism
 # TODO: Non sono completamente sicuro del riuso del file tei in caso ci sia già, capire se l'ho fatto
 def main():
     output_dir = Path("C:/Progetti Git/PaperLens/output")
@@ -23,7 +21,9 @@ def main():
         grobid_url=grobid_url
     )
 
-    indexing_service.run_indexing_pipeline()
+    result = indexing_service.run_indexing_pipeline()
+    if not result.succeeded:
+        raise RuntimeError(result.error or "Document indexing failed.")
 
 if __name__ == "__main__":
     main()

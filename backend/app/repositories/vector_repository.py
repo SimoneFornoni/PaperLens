@@ -142,3 +142,30 @@ class VectorRepository:
 
         logger.info(f"Upserted {len(points)} chunks into Qdrant collection '{self.collection_name}'.")
         return len(points)
+
+    def delete_document_chunks(self, document_hash: str) -> None:
+        """Delete all vector points belonging to a document in this model's collection.
+        
+        Args:
+            document_hash (str): The hash of the document whose chunks are to be deleted.
+        """
+        self._connection.client.delete(
+            collection_name=self.collection_name,
+            points_selector=qm.FilterSelector(
+                filter=qm.Filter(
+                    must=[
+                        qm.FieldCondition(
+                            key="document_hash",
+                            match=qm.MatchValue(value=document_hash),
+                        )
+                    ]
+                )
+            ),
+            wait=True,
+        )
+        
+        logger.info(
+            "Deleted vector points for document '%s' from collection '%s'.",
+            document_hash,
+            self.collection_name,
+        )

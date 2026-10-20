@@ -123,6 +123,47 @@ class RegistryRepository:
         if title in self.reserved_titles:
             self.reserved_titles.remove(title)
 
+    def unregister_document_model(self, document_hash: str, model: str) -> None:
+        """Remove one model from a document's registry entry, preserving other models.
+        
+        Args:
+            document_hash (str): The hash of the document.
+            model (str): The embedding model to remove from the document's registry entry.
+        """
+        point_id = self._generate_point_id(document_hash)
+        existing = self._connection.client.retrieve(
+            collection_name=self.collection_name,
+            ids=[point_id],
+            with_payload=True,
+            with_vectors=False,
+        )
+
+        if not existing or not existing[0].payload:
+            return
+
+        payload = existing[0].payload
+        models = list(payload.get("models", []))
+        if model not in models:
+            return
+
+        remaining_models = [registered_model for registered_model in models if registered_model != model]
+        if remaining_models:
+            self._connection.client.set_payload(
+                collection_name=self.collection_name,
+                points=[point_id],
+                payload={
+                    "document_hash": document_hash,
+                    "title": payload.get("title", ""),
+                    "models": remaining_models,
+                },
+            )
+        else:
+            self._connection.client.delete(
+                collection_name=self.collection_name,
+                points_selector=qm.PointIdsList(points=[point_id]),
+                wait=True,
+            )
+
     def is_document_registered(self, document_hash: str) -> RegistryEntry | None:
         """Checks if a document is registered in the registry collection.
         

@@ -1,14 +1,8 @@
 import pytest
 from unittest.mock import patch
 from types import SimpleNamespace
-from pathlib import Path
 
 from app.repositories.vector_repository import VectorRepository
-
-# import sys
-# PROJECT_ROOT = Path(__file__).resolve().parents[3]
-# if str(PROJECT_ROOT) not in sys.path:
-#     sys.path.insert(0, str(PROJECT_ROOT))
 
 def test_upsert_chunks():
     with patch('app.repositories.vector_repository.QdrantConnectionProvider') as MockConnection:
@@ -62,3 +56,17 @@ def test_upsert_chunks_raises_for_length_mismatch():
 
         with pytest.raises(ValueError, match="Length of chunks, dense_embeddings, and sparse_embeddings must be the same."):
             SUT.upsert_chunks(chunks, dense_embeddings, sparse_embeddings)
+
+
+def test_delete_document_chunks():
+    with patch('app.repositories.vector_repository.QdrantConnectionProvider') as MockConnection:
+        mock_connection = MockConnection.return_value
+        mock_client = mock_connection.client
+
+        SUT = VectorRepository(connection=mock_connection)
+
+        SUT.delete_document_chunks("hash1")
+
+        mock_client.delete.assert_called_once()
+        assert mock_client.delete.call_args.kwargs["collection_name"] == SUT.collection_name
+        assert mock_client.delete.call_args.kwargs["wait"] is True

@@ -44,15 +44,16 @@ class DocumentIngestor:
         document_hash = compute_hash(document_path_obj)
         document_record = self.registry_repo.is_document_registered(document_hash=document_hash)
         if document_record is not None and self.dense_model_name in document_record.models:
-            logger.info(f"Document {document_path} is already registered.")
             return {
+                "status": "already_indexed",
                 "message": f"Document {document_record.title} is already indexed.",
-                "document_hash": document_hash
+                "document_hash": document_hash,
+                "title": document_record.title,
             }
             
         self.pdf_cache_handler.add_pdf(document_path_obj, document_hash=document_hash)
-        logger.info(f"Document {document_path} has been ingested into the cache.")
         return {
+            "status": "ingested",
             "message": f"Document ingested successfully.",
             "document_hash": document_hash
         }

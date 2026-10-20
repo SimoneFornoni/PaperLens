@@ -1,5 +1,6 @@
+"""Models used in the repositoryies."""
+
 from dataclasses import dataclass, field
-from typing import List
 
 @dataclass(frozen=True)
 class RegistryEntry:

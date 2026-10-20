@@ -1,13 +1,7 @@
 import pytest
 from unittest.mock import patch
-from pathlib import Path
 
 from app.services.indexing.embedder import Embedder
-
-# import sys
-# PROJECT_ROOT = Path(__file__).resolve().parents[3]
-# if str(PROJECT_ROOT) not in sys.path:
-#     sys.path.insert(0, str(PROJECT_ROOT))
 
 def test_embed_text():
     SUT = Embedder()

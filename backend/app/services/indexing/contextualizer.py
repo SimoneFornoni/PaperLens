@@ -57,13 +57,13 @@ class Contextualizer:
             raise ConnectionError(f"Failed to validate connection to ollama service at {self.ollama_url}: {e}")
     
     def contextualize(self, 
-                      all_texts: list[str],
+                      all_text_chunks: list[str],
                       document_text: str) -> List[ContextualizedChunk]:
         """Generate contextualized chunks of text by prompting an LLM to provide context for each chunk.
         
         Args:
             document_text (str): The full text of the document.
-            all_texts (list[str]): A list of text chunks to contextualize.
+            all_text_chunks (list[str]): A list of text chunks to contextualize.
             
         Returns:
             List[ContextualizedChunk]: The original, contextualized, and
@@ -72,7 +72,7 @@ class Contextualizer:
         contextualized_results = []
 
         doc_summary = self._generate_document_summary(document_text)
-        optimal_num_ctx = self._determine_optimal_context_length(all_texts, len(doc_summary))
+        optimal_num_ctx = self._determine_optimal_context_length(all_text_chunks, len(doc_summary))
 
         prompt_template = (
             "<document_summary>\n{doc_summary}\n</document_summary>\n\n"
@@ -87,7 +87,7 @@ class Contextualizer:
             "Context sentence:"
         )
 
-        for chunk in all_texts:
+        for chunk in all_text_chunks:
             formatted_prompt = prompt_template.format(
                 doc_summary=doc_summary, 
                 chunk=chunk.strip()
@@ -122,11 +122,11 @@ class Contextualizer:
                     context_text="",
                 ))
 
-        logger.info(f"Contextualization completed for {len(all_texts)} chunks.")
+        logger.info(f"Contextualization completed for {len(all_text_chunks)} chunks.")
         self._flush_ollama_cache()
         return contextualized_results
 
-    def _determine_optimal_context_length(self, all_texts: list[str], doc_summary_length: int) -> int:
+    def _determine_optimal_context_length(self, all_text_chunks: list[str], doc_summary_length: int) -> int:
             """Determine the optimal context length for the LLM based on the document summary and text chunks.
     
             Args:
@@ -136,7 +136,7 @@ class Contextualizer:
             Returns:
                 int: The optimal context length for the LLM.
             """
-            max_chunk_chars = max((len(chunk) for chunk in all_texts), default=0)
+            max_chunk_chars = max((len(chunk) for chunk in all_text_chunks), default=0)
             prompt_tokens = (doc_summary_length + max_chunk_chars) // self._CHARS_PER_TOKEN
             required_ctx = prompt_tokens + self._PREDICT_MAX_TOKENS_CHUNK + self._BUFFER_TOKENS
             return max(self._DEFAULT_MIN_CTX, min(required_ctx, self._DEFAULT_MAX_CTX)) 

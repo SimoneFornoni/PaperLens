@@ -5,11 +5,6 @@ from pathlib import Path
 from app.services.caches.pdf_cache_handler import PDFCacheHandler
 from app.services.caches.tei_cache_handler import TEICacheHandler
 
-# import sys
-# PROJECT_ROOT = Path(__file__).resolve().parents[3]
-# if str(PROJECT_ROOT) not in sys.path:
-#     sys.path.insert(0, str(PROJECT_ROOT))
-
 HASH_1 = "1" * 64
 HASH_2 = "2" * 64
 FAKE_HASH = "a" * 64

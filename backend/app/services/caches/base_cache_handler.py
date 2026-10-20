@@ -6,8 +6,6 @@ from pathlib import Path
 from typing import List
 import re
 
-from app.utils.pdf_helpers import compute_hash
-
 logger = logging.getLogger(__name__)
 
 class BaseCacheHandler:
@@ -62,7 +60,7 @@ class BaseCacheHandler:
         destination = Path(self.cache_dir) / f"{document_hash}{self.allowed_suffix}"
 
         if destination.exists():
-            logger.warning(f"{self.kind_name} '{file_path}' already exists in cache as '{destination}'.")
+            logger.info(f"{self.kind_name} '{file_path}' already exists in cache as '{destination}'.")
             return destination
 
         try:

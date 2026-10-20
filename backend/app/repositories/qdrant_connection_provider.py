@@ -8,7 +8,11 @@ class QdrantConnectionProvider:
     """Provides a connection to the Qdrant service."""
 
     def __init__(self, qdrant_url: str = "http://localhost:6333"):
-        """Initializes the QdrantConnectionProvider with the specified Qdrant URL."""
+        """Initializes the QdrantConnectionProvider with the specified Qdrant URL.
+        
+        Args:
+            qdrant_url (str): The URL of the Qdrant service.".
+        """
         self.qdrant_url = qdrant_url
         self._client: qc.QdrantClient | None = None
 

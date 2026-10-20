@@ -2,11 +2,6 @@ from unittest.mock import patch
 from types import SimpleNamespace
 
 from app.repositories.registry_repository import RegistryRepository
-
-# import sys
-# PROJECT_ROOT = Path(__file__).resolve().parents[3]
-# if str(PROJECT_ROOT) not in sys.path:
-#     sys.path.insert(0, str(PROJECT_ROOT))
     
 def test_register_document():
     with patch('app.repositories.registry_repository.QdrantConnectionProvider') as MockConnection:
@@ -53,6 +48,49 @@ def test_register_document_with_different_model():
             "title": title,
             "models": ["Model 1", model],
         }
+
+
+def test_unregister_document_model_preserves_other_models():
+    with patch('app.repositories.registry_repository.QdrantConnectionProvider') as MockConnection:
+        mock_connection = MockConnection.return_value
+        mock_client = mock_connection.client
+        mock_client.retrieve.return_value = [
+            SimpleNamespace(
+                id="point_id",
+                payload={"document_hash": "hash1", "title": "Title 1", "models": ["Model 1", "Model 2"]},
+            )
+        ]
+
+        SUT = RegistryRepository(connection=mock_connection)
+        SUT.unregister_document_model("hash1", "Model 2")
+
+        mock_client.set_payload.assert_called_once()
+        assert mock_client.set_payload.call_args.kwargs["payload"] == {
+            "document_hash": "hash1",
+            "title": "Title 1",
+            "models": ["Model 1"],
+        }
+        mock_client.delete.assert_not_called()
+
+
+def test_unregister_last_document_model_deletes_registry_entry():
+    with patch('app.repositories.registry_repository.QdrantConnectionProvider') as MockConnection:
+        mock_connection = MockConnection.return_value
+        mock_client = mock_connection.client
+        mock_client.retrieve.return_value = [
+            SimpleNamespace(
+                id="point_id",
+                payload={"document_hash": "hash1", "title": "Title 1", "models": ["Model 1"]},
+            )
+        ]
+
+        SUT = RegistryRepository(connection=mock_connection)
+        SUT.unregister_document_model("hash1", "Model 1")
+
+        mock_client.delete.assert_called_once()
+        assert mock_client.delete.call_args.kwargs["wait"] is True
+        mock_client.set_payload.assert_not_called()
+
 
 def test_is_document_registered():
     with patch('app.repositories.registry_repository.QdrantConnectionProvider') as MockConnection:

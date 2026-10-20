@@ -1,7 +1,21 @@
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Literal
 
 from app.models.domain import Sentence
+
+@dataclass(frozen=True)
+class IndexingResult:
+    """Outcome of a document indexing attempt."""
+    status: Literal["indexed", "already_indexed", "failed"]
+    document_hash: str | None = None
+    title: str | None = None
+    chunk_count: int = 0
+    error: str | None = None
+    rollback_errors: tuple[str, ...] = ()
+
+    @property
+    def succeeded(self) -> bool:
+        return self.status != "failed"
 
 @dataclass
 class ProcessedParagraph:

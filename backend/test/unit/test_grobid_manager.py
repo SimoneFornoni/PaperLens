@@ -4,11 +4,6 @@ from pathlib import Path
 
 from app.services.indexing.pdf_parser import PDFParser
 
-# import sys
-# PROJECT_ROOT = Path(__file__).resolve().parents[3]
-# if str(PROJECT_ROOT) not in sys.path:
-#     sys.path.insert(0, str(PROJECT_ROOT))
-
 def test_parse_pdf(tmp_path):
     SUT = PDFParser(grobid_url="http://localhost:8070", output_dir=tmp_path)
 

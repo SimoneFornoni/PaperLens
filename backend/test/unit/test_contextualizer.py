@@ -1,14 +1,8 @@
 import pytest
 from unittest.mock import patch
 from types import SimpleNamespace
-from pathlib import Path
 
 from app.services.indexing.contextualizer import Contextualizer
-
-import sys
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
 
 def test_contextualize():
     mock_model = SimpleNamespace(name="llama3.2:3b")
@@ -29,7 +23,7 @@ def test_contextualize():
         SUT = Contextualizer(generative_model_name="llama3.2:3b")
         results = SUT.contextualize(
             document_text="Testo del documento", 
-            all_texts=["Chunk 1", "Chunk 2"]
+            all_text_chunks=["Chunk 1", "Chunk 2"]
         )
 
     assert len(results) == 2
@@ -67,7 +61,7 @@ def test_contextualize_fallback_on_generate_exception():
         SUT = Contextualizer(generative_model_name="llama3.2:3b")
         results = SUT.contextualize(
             document_text="Testo del documento", 
-            all_texts=["Chunk con errore"]
+            all_text_chunks=["Chunk con errore"]
         )
 
     assert len(results) == 1
