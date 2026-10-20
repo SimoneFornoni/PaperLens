@@ -1,14 +1,14 @@
 """Test cases for the Chunker service."""
 
 from pathlib import Path
-import sys
 import xml.etree.ElementTree as ET
 
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
 from app.services.indexing.chunker import Chunker
+
+# import sys
+# PROJECT_ROOT = Path(__file__).resolve().parents[3]
+# if str(PROJECT_ROOT) not in sys.path:
+#     sys.path.insert(0, str(PROJECT_ROOT))
 
 def test_extract_text_chunks():
     tei_xml_content = """

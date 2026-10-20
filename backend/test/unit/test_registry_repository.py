@@ -3,8 +3,13 @@ from types import SimpleNamespace
 
 from app.repositories.registry_repository import RegistryRepository
 
+# import sys
+# PROJECT_ROOT = Path(__file__).resolve().parents[3]
+# if str(PROJECT_ROOT) not in sys.path:
+#     sys.path.insert(0, str(PROJECT_ROOT))
+    
 def test_register_document():
-    with patch('app.services.registry_repository.QdrantConnectionProvider') as MockConnection:
+    with patch('app.repositories.registry_repository.QdrantConnectionProvider') as MockConnection:
         mock_connection = MockConnection.return_value
         mock_client = mock_connection.client
         mock_client.retrieve.return_value = []
@@ -20,7 +25,7 @@ def test_register_document():
         assert mock_client.upsert.call_count == 1
 
 def test_register_document_with_different_model():
-    with patch('app.services.registry_repository.QdrantConnectionProvider') as MockConnection:
+    with patch('app.repositories.registry_repository.QdrantConnectionProvider') as MockConnection:
         mock_connection = MockConnection.return_value
         mock_client = mock_connection.client
         mock_client.retrieve.side_effect = [
@@ -39,7 +44,7 @@ def test_register_document_with_different_model():
         assert mock_client.set_payload.call_count == 1
 
 def test_is_document_registered():
-    with patch('app.services.registry_repository.QdrantConnectionProvider') as MockConnection:
+    with patch('app.repositories.registry_repository.QdrantConnectionProvider') as MockConnection:
         mock_connection = MockConnection.return_value
         mock_client = mock_connection.client
 
@@ -54,7 +59,7 @@ def test_is_document_registered():
         assert result is None
 
 def test_is_document_registered_with_existing_document():
-    with patch('app.services.registry_repository.QdrantConnectionProvider') as MockConnection:
+    with patch('app.repositories.registry_repository.QdrantConnectionProvider') as MockConnection:
         mock_connection = MockConnection.return_value
         mock_client = mock_connection.client
 
@@ -74,7 +79,7 @@ def test_is_document_registered_with_existing_document():
         assert "Model 1" in result.models
 
 def test_is_title_registered():
-    with patch('app.services.registry_repository.QdrantConnectionProvider') as MockConnection:
+    with patch('app.repositories.registry_repository.QdrantConnectionProvider') as MockConnection:
         mock_connection = MockConnection.return_value
         mock_client = mock_connection.client
 
@@ -89,7 +94,7 @@ def test_is_title_registered():
         assert result is False
 
 def test_is_title_registered_with_existing_title():
-    with patch('app.services.registry_repository.QdrantConnectionProvider') as MockConnection:
+    with patch('app.repositories.registry_repository.QdrantConnectionProvider') as MockConnection:
         mock_connection = MockConnection.return_value
         mock_client = mock_connection.client
 
@@ -104,7 +109,7 @@ def test_is_title_registered_with_existing_title():
         assert result is True
 
 def test_list_registered_documents():
-    with patch('app.services.registry_repository.QdrantConnectionProvider') as MockConnection:
+    with patch('app.repositories.registry_repository.QdrantConnectionProvider') as MockConnection:
         mock_connection = MockConnection.return_value
         mock_client = mock_connection.client
 
@@ -123,5 +128,4 @@ def test_list_registered_documents():
         assert len(result) == 2
         assert result[0] == "Title 1"
         assert result[1] == "Title 2"
-
 

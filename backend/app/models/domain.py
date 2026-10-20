@@ -6,7 +6,7 @@ from typing import List
 class Sentence:
     """Represents a sentence with its text and coordinates."""
     text: str
-    coordinates: str
+    coords: str
 
 @dataclass
 class Chunk:

@@ -2,13 +2,13 @@ import pytest
 from unittest.mock import patch
 from types import SimpleNamespace
 from pathlib import Path
-import sys
 
+from app.services.indexing.contextualizer import Contextualizer
+
+import sys
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
-
-from app.services.indexing.contextualizer import Contextualizer
 
 def test_contextualize():
     mock_model = SimpleNamespace(name="llama3.2:3b")
@@ -21,7 +21,7 @@ def test_contextualize():
             return {"response": "Contesto per il chunk"}
         return {"response": ""}
 
-    with patch("app.services.contextualizer.Client") as mock_ollama_client:
+    with patch("app.services.indexing.contextualizer.Client") as mock_ollama_client:
         mock_instance = mock_ollama_client.return_value
         mock_instance.models.return_value = [mock_model]
         mock_instance.generate.side_effect = mock_generate
@@ -43,7 +43,7 @@ def test_contextualize():
 def test_contextualize_raises_for_missing_model():
     mock_model = SimpleNamespace(name="altro_modello:latest")
 
-    with patch("app.services.contextualizer.Client") as mock_ollama_client:
+    with patch("app.services.indexing.contextualizer.Client") as mock_ollama_client:
         mock_instance = mock_ollama_client.return_value
         mock_instance.models.return_value = [mock_model]
 
@@ -59,7 +59,7 @@ def test_contextualize_fallback_on_generate_exception():
             return {"response": "Sommario del documento"}
         raise Exception("Ollama service error")
 
-    with patch("app.services.contextualizer.Client") as mock_ollama_client:
+    with patch("app.services.indexing.contextualizer.Client") as mock_ollama_client:
         mock_instance = mock_ollama_client.return_value
         mock_instance.models.return_value = [mock_model]
         mock_instance.generate.side_effect = mock_generate_with_error

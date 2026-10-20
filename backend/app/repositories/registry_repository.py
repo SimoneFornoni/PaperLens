@@ -130,7 +130,7 @@ class RegistryRepository:
             document_hash (str): The hash of the document.
         
         Returns:
-            DocumentRecord | None: A DocumentRecord with the document's metadata if registered, None otherwise.
+            RegistryEntry | None: The document's metadata if registered, None otherwise.
         """
         registry_id = self._generate_point_id(document_hash)
         flt = qm.Filter(
@@ -152,7 +152,7 @@ class RegistryRepository:
                 )
 
                 if points:
-                    return DocumentRecord(
+                    return RegistryEntry(
                         document_hash=document_hash,
                         title=points[0].payload.get("title", ""),
                         models=frozenset(points[0].payload.get("models", []))

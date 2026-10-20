@@ -1,24 +1,28 @@
 from pathlib import Path
 
-from app.repositories.qdrant_connection_provider import QdrantConnectionProvider
-from app.repositories.registry_repository import RegistryRepository
-from app.services.indexing.document_ingestor import DocumentIngestor
-from app.services.indexing.pdf_parser import GROBIDManager
-from app.services.indexing.chunker import Chunker
-from app.services.indexing.contextualizer import Contextualizer
-from app.services.indexing.embedder import Embedder
-from app.services.indexing.paper_namer import PaperNamer
-from app.repositories.vector_repository import VectorRepository
+from repositories.qdrant_connection_provider import QdrantConnectionProvider
+from repositories.registry_repository import RegistryRepository
+from services.indexing.document_ingestor import DocumentIngestor
+from services.indexing.pdf_parser import PDFParser
+from services.indexing.chunker import Chunker
+from services.indexing.contextualizer import Contextualizer
+from services.indexing.embedder import Embedder
+from services.indexing.paper_namer import PaperNamer
+from repositories.vector_repository import VectorRepository
 
-from app.models.domain import Chunk, ContextualizedChunk
+from models.domain import Chunk
+from services.indexing.models import ContextualizedChunk
 
+# TODO: fare indexing service
 # TODO: Add rollback mechanism
 # TODO: Non sono completamente sicuro del riuso del file tei in caso ci sia già, capire se l'ho fatto
 # FIXME: Lo sparse vector viene sempre salvato vuoto... non so perché
+#           eseguendo main ho notato due problemi. I vettori sparsi generati sono tutti vuoti.
+#           Non viene aggiunta nessuna entry relativa all'articolo che si é indicizzato in registry.
 def main():
     output_dir = Path("C:/Progetti Git/PaperLens/output")
     document_path = Path("C:/Progetti Git/Tesi/articles/Test/RAG_Advanced.pdf")
-    dense_model_name = "BAAI/bge-base-en-v1.5"
+    dense_model_name = "sentence-transformers/all-MiniLM-L6-v2" #BAAI/bge-base-en-v1.5
     contextualization_enabled = False
 
     qdrant_url = "http://localhost:6333"
@@ -36,7 +40,7 @@ def main():
         result = document_ingestor.ingest_document(document_path)
         print(f"Ingestion result: {result}")
 
-        grobid_manager = GROBIDManager(grobid_url=grobid_url, output_dir=output_dir)
+        grobid_manager = PDFParser(grobid_url=grobid_url, output_dir=output_dir)
         et_element = grobid_manager.parse_pdf(document_path)
         print(f"TEI XML generated at: {et_element}")
 
@@ -86,7 +90,11 @@ def main():
             )
             chunks.append(chunk)
 
-        vector_repo = VectorRepository(connection=qdrant_connection)
+        vector_repo = VectorRepository(
+            connection=qdrant_connection, 
+            dense_model_name=dense_model_name, 
+            dense_vector_size=embedder.dense_vector_size
+        )
         upserted_count = vector_repo.upsert_chunks(chunks, embeddings["dense"], embeddings["sparse"])
         print(f"Number of chunks upserted into Qdrant: {upserted_count}")
     except Exception as e:

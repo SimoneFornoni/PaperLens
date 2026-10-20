@@ -154,7 +154,7 @@ class Chunker:
                 sentences_coords.append(Sentence(text=paragraph_text, coords=p_elem.get('coords', '')))
                 return ProcessedParagraph(text=paragraph_text, page_num=page_num, sentences=sentences_coords)
 
-        paragraph_text = ' '.join([sent for sent, _ in sentences_coords])
+        paragraph_text = ' '.join(sentence.text for sentence in sentences_coords)
         return ProcessedParagraph(text=paragraph_text, page_num=page_num, sentences=sentences_coords)
 
     def _determine_section_type(self, head_text):

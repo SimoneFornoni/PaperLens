@@ -1,17 +1,16 @@
 """Test cases for the DocumentIngestor service."""
 
-import sys
 from pathlib import Path
 from unittest.mock import Mock, patch
 import pytest
 
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
 from app.services.indexing.document_ingestor import DocumentIngestor
-from app.models.domain import DocumentRecord
+from app.repositories.models import RegistryEntry
 
+# import sys
+# PROJECT_ROOT = Path(__file__).resolve().parents[3]
+# if str(PROJECT_ROOT) not in sys.path:
+#     sys.path.insert(0, str(PROJECT_ROOT))
 
 def test_ingest_document(tmp_path):
     pdf_path = tmp_path / "test.pdf"
@@ -26,7 +25,7 @@ def test_ingest_document(tmp_path):
     SUT = DocumentIngestor(registry_repo=mock_registry_repo, output_dir=str(tmp_path))
     SUT.pdf_cache_handler = mock_pdf_cache_handler
 
-    with patch("app.services.document_ingestor.compute_hash", return_value="hash1"):
+    with patch("app.services.indexing.document_ingestor.compute_hash", return_value="hash1"):
         result = SUT.ingest_document(str(pdf_path))
 
     assert "ingested successfully" in result["message"]
@@ -40,7 +39,7 @@ def test_ingest_document_file_not_found():
 
     SUT = DocumentIngestor(registry_repo=mock_registry_repo, output_dir="output")
 
-    with patch("app.services.document_ingestor.compute_hash", return_value="hash1"):
+    with patch("app.services.indexing.document_ingestor.compute_hash", return_value="hash1"):
         with pytest.raises(ValueError, match="File non_existent.pdf does not exist."):
             SUT.ingest_document("non_existent.pdf")
 
@@ -49,7 +48,7 @@ def test_ingest_document_already_registered(tmp_path):
     pdf_path = tmp_path / "test.pdf"
     pdf_path.write_bytes(b"%PDF-1.4\n%EOF")
 
-    mock_doc_record = DocumentRecord(
+    mock_doc_record = RegistryEntry(
         title="already_indexed_paper",
         document_hash="hash1",
         models=frozenset(["BAAI/bge-base-en-v1.5"])
@@ -67,7 +66,7 @@ def test_ingest_document_already_registered(tmp_path):
     )
     SUT.pdf_cache_handler = mock_pdf_cache_handler
 
-    with patch("app.services.document_ingestor.compute_hash", return_value="hash1"):
+    with patch("app.services.indexing.document_ingestor.compute_hash", return_value="hash1"):
         result = SUT.ingest_document(str(pdf_path))
 
     assert "already indexed" in result["message"]
@@ -79,7 +78,7 @@ def test_ingest_document_with_different_model(tmp_path):
     pdf_path = tmp_path / "test.pdf"
     pdf_path.write_bytes(b"%PDF-1.4\n%EOF")
 
-    mock_doc_record = DocumentRecord(
+    mock_doc_record = RegistryEntry(
         title="paper_with_different_model",
         document_hash="hash1",
         models=frozenset(["some-other-model"])
@@ -98,7 +97,7 @@ def test_ingest_document_with_different_model(tmp_path):
     )
     SUT.pdf_cache_handler = mock_pdf_cache_handler
 
-    with patch("app.services.document_ingestor.compute_hash", return_value="hash1"):
+    with patch("app.services.indexing.document_ingestor.compute_hash", return_value="hash1"):
         result = SUT.ingest_document(str(pdf_path))
 
     assert "ingested successfully" in result["message"]

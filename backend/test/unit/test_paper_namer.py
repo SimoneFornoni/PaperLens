@@ -1,14 +1,14 @@
-import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from unittest.mock import Mock
 
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
 from app.services.indexing.paper_namer import PaperNamer
-from app.models.domain import DocumentRecord
+from app.repositories.models import RegistryEntry
+
+# import sys
+# PROJECT_ROOT = Path(__file__).resolve().parents[3]
+# if str(PROJECT_ROOT) not in sys.path:
+#     sys.path.insert(0, str(PROJECT_ROOT))
 
 def test_resolve_standard_paper_name(tmp_path):
     mock_registry_repo = Mock()
@@ -78,7 +78,7 @@ def test_resolve_standard_paper_name_duplicate(tmp_path):
 def test_resolve_paper_name_for_registered_document(tmp_path):
     """Test that when a document is already registered, its title is returned."""
     mock_registry_repo = Mock()
-    mock_doc_record = DocumentRecord(
+    mock_doc_record = RegistryEntry(
         title="existing_paper",
         document_hash="hash_existing",
         models=frozenset(["BAAI/bge-base-en-v1.5"])
