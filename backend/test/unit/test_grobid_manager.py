@@ -25,6 +25,7 @@ def test_parse_pdf(tmp_path):
          patch.object(SUT, 'tei_cache_handler') as mock_cache_handler, \
          patch('app.services.indexing.pdf_parser.tempfile.mkdtemp', side_effect=[str(input_dir), str(output_dir)]), \
          patch('app.services.indexing.pdf_parser.GrobidClient') as mock_grobid_client:
+        mock_cache_handler.get_tei_path.side_effect = FileNotFoundError
         mock_grobid_instance = mock_grobid_client.return_value
         mock_grobid_instance.process.side_effect = write_tei_result
 
@@ -34,6 +35,27 @@ def test_parse_pdf(tmp_path):
     mock_cache_handler.add_tei.assert_called_once_with(
         Path(output_dir) / "test.tei.xml", document_hash="pdfhash"
     )
+
+def test_parse_pdf_returns_cached_tei_without_checking_grobid(tmp_path):
+    SUT = PDFParser(grobid_url="http://localhost:8070", output_dir=tmp_path)
+
+    mocked_pdf = tmp_path / "test.pdf"
+    mocked_pdf.write_bytes(b"%PDF-1.4\n%EOF")
+    cached_tei = tmp_path / "cached.tei.xml"
+    cached_tei.write_text("<TEI><text>cached</text></TEI>", encoding="utf-8")
+
+    with patch('app.services.indexing.pdf_parser.compute_hash', return_value='pdfhash'), \
+         patch.object(SUT, '_is_alive') as mock_is_alive, \
+         patch.object(SUT, 'tei_cache_handler') as mock_cache_handler, \
+         patch('app.services.indexing.pdf_parser.GrobidClient') as mock_grobid_client:
+        mock_cache_handler.get_tei_path.return_value = cached_tei
+
+        result = SUT.parse_pdf(mocked_pdf)
+
+    assert result.find("text").text == "cached"
+    mock_cache_handler.get_tei_path.assert_called_once_with("pdfhash")
+    mock_is_alive.assert_not_called()
+    mock_grobid_client.assert_not_called()
 
 def test_parse_pdf_raises_for_non_pdf_file(tmp_path):
     SUT = PDFParser(grobid_url="http://localhost:8070", output_dir=tmp_path)

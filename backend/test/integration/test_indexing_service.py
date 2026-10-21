@@ -5,7 +5,7 @@ from app.services.indexing import indexing_service as indexing_module
 from app.services.indexing.indexing_service import IndexingService
 
 
-def configure_pipeline(monkeypatch, ingestion_status="ingested"):
+def configure_pipeline(monkeypatch, ingestion_status="ingested", contextualization_enabled=False):
     connection = Mock()
     registry_repo = Mock()
     monkeypatch.setattr(indexing_module, "QdrantConnectionProvider", Mock(return_value=connection))
@@ -47,7 +47,11 @@ def configure_pipeline(monkeypatch, ingestion_status="ingested"):
     vector_repo.upsert_chunks.return_value = 1
     monkeypatch.setattr(indexing_module, "VectorRepository", Mock(return_value=vector_repo))
 
-    service = IndexingService(output_dir=None, document_path=None)
+    service = IndexingService(
+        output_dir=None,
+        document_path=None,
+        contextualization_enabled=contextualization_enabled,
+    )
     return service, parser, registry_repo, vector_repo
 
 
@@ -83,6 +87,25 @@ def test_pipeline_skips_already_indexed_document(monkeypatch):
     parser.parse_pdf.assert_not_called()
     registry_repo.register_document.assert_not_called()
     vector_repo.upsert_chunks.assert_not_called()
+
+
+def test_pipeline_returns_error_when_enabled_contextualization_fails(monkeypatch):
+    service, _, registry_repo, vector_repo = configure_pipeline(
+        monkeypatch,
+        contextualization_enabled=True,
+    )
+    contextualizer = Mock()
+    contextualizer.contextualize.side_effect = RuntimeError("Ollama service error")
+    monkeypatch.setattr(indexing_module, "Contextualizer", Mock(return_value=contextualizer))
+
+    result = service.run_indexing_pipeline()
+
+    assert result.status == "failed"
+    assert not result.succeeded
+    assert result.error == "Ollama service error"
+    registry_repo.register_document.assert_not_called()
+    vector_repo.upsert_chunks.assert_not_called()
+    vector_repo.delete_document_chunks.assert_not_called()
 
 
 def test_pipeline_removes_partial_vectors_after_upsert_failure(monkeypatch):

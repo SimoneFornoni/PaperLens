@@ -41,8 +41,7 @@ class VectorRepository:
             self._connection.client.create_collection(
                 collection_name=self.collection_name,
                 hnsw_config=qm.HnswConfigDiff(
-                    m=16, 
-                    ef_construct=100
+                    m=0
                 ),
                 vectors_config={
                     "dense_vector": qm.VectorParams(
@@ -67,7 +66,6 @@ class VectorRepository:
                 field_name="document_hash",
                 field_schema=qm.KeywordIndexParams(
                     type="keyword",
-                    enable_hnsw=False,  # No need for HNSW index because there are no vector search with filter on document_hash
                     on_disk=True
                 )
             )

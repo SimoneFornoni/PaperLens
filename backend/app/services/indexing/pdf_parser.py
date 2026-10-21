@@ -66,6 +66,15 @@ class PDFParser:
             raise ValueError(f"Provided path '{pdf_path}' is not a valid file.")
         
         try:
+            document_hash = compute_hash(pdf_path)
+            try:
+                cached_tei_path = self.tei_cache_handler.get_tei_path(document_hash)
+            except FileNotFoundError:
+                cached_tei_path = None
+
+            if cached_tei_path is not None:
+                return ET.fromstring(cached_tei_path.read_bytes())
+
             if not self._is_alive():
                 message = f"GROBID service is not reachable at {self.grobid_url}. Start GROBID and try again."
                 logger.error(message)
@@ -107,7 +116,6 @@ class PDFParser:
                         content = tei_path.read_bytes()
                         root = ET.fromstring(content)
                         try:
-                            document_hash = compute_hash(pdf_path)
                             _ = self.tei_cache_handler.add_tei(
                                 tei_path, document_hash=document_hash
                             )

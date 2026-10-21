@@ -28,6 +28,9 @@ class RegistryRepository:
         if not self._connection.client.collection_exists(self.collection_name):
             self._connection.client.create_collection(
                 collection_name=self.collection_name,
+                hnsw_config=qm.HnswConfigDiff(
+                    m=0
+                ),
                 vectors_config=None
             )
 
@@ -36,7 +39,6 @@ class RegistryRepository:
                 field_name="title",
                 field_schema=qm.KeywordIndexParams(
                     type="keyword",
-                    enable_hnsw=False
                 )
             )
 
@@ -45,7 +47,6 @@ class RegistryRepository:
                 field_name="models",
                 field_schema=qm.KeywordIndexParams(
                     type="keyword",
-                    enable_hnsw=False
                 )
             )
 

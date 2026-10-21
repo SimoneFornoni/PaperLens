@@ -107,20 +107,18 @@ class Contextualizer:
 
                 context_prefix = response["response"].strip().strip('"').strip("'")
                 context_prefix = context_prefix.replace("```", "").strip()
+                if not context_prefix:
+                    raise RuntimeError("Context generation returned an empty response.")
 
-                full_chunk = f"{context_prefix}\n\n{chunk}" if context_prefix else chunk
+                full_chunk = f"{context_prefix}\n\n{chunk}"
                 contextualized_results.append(ContextualizedChunk(
                     original_text=chunk,
                     contextualized_text=full_chunk,
                     context_text=context_prefix,
                 ))
-            except Exception as e:
-                logger.error(f"Error during contextualization for chunk: '{chunk[:10]}...': {e}")
-                contextualized_results.append(ContextualizedChunk(
-                    original_text=chunk,
-                    contextualized_text=chunk,
-                    context_text="",
-                ))
+            except Exception:
+                logger.exception("Error during contextualization for chunk: '%s...'.", chunk[:10])
+                raise
 
         logger.info(f"Contextualization completed for {len(all_text_chunks)} chunks.")
         self._flush_ollama_cache()
@@ -173,11 +171,14 @@ class Contextualizer:
                 keep_alive=-1
             )
 
+            summary = response["response"].strip()
+            if not summary:
+                raise RuntimeError("Document summary generation returned an empty response.")
             logger.info("Document summary generated successfully.")
-            return response['response'].strip()
-        except Exception as e:
-            logger.warning(f"Document summary generation failed: {e}")
-            return ""
+            return summary
+        except Exception:
+            logger.exception("Document summary generation failed.")
+            raise
 
     def _determine_optimal_context_length_for_summary(self, document_text_length: int) -> int:
         """Determine the optimal context length for the LLM to generate a summary of the document
